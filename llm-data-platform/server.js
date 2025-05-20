@@ -11,15 +11,18 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const geminiConfig = require('./config/gemini-config');
 const firebaseConfig = require('./config/firebase-config');
+const firebaseAdmin = require('./config/firebase-admin-config');
 const { parseWebsite } = require('./src/utils/websiteParser');
 const geminiApi = require('./src/utils/geminiApi');
 const { integrateDataForRugPull } = require('./src/utils/rugPullIntegrator');
 const { generateAgentCode } = require('./src/utils/agentGenerator');
 const { generateApiKey, generateTelegramBotCode, generateSetupInstructions } = require('./src/utils/telegramBotIntegration');
+const { MAX_STORAGE_PER_CHATBOT, calculateChatbotStorageSize, checkStorageLimit, cleanupOldestData, getStringSizeInBytes } = require('./src/utils/storageLimiter');
 
 // Create Express app
 const app = express();
-const PORT = process.env.PORT || 3000;
+// Note: Flowise uses port 3000 by default, so we'll use 3001 for our server
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
@@ -64,7 +67,7 @@ const db = {
 };
 
 // ===== FILE UPLOAD ENDPOINT =====
-app.post('/api/upload', upload.single('file'), (req, res) => {
+app.post('/api/upload', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -76,6 +79,49 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
     // Extract text content (simplified for demo)
     const textContent = fs.readFileSync(file.path, 'utf-8').substring(0, 1000) + '...';
     
+    // Check if file would exceed storage limit
+    const fileSize = file.size;
+    const metadataSize = getStringSizeInBytes(textContent);
+    const totalItemSize = fileSize + metadataSize;
+    
+    // Check storage limit for this user
+    const storageCheck = await checkStorageLimit(firebaseConfig.db, userId, totalItemSize);
+    
+    if (storageCheck.wouldExceedLimit) {
+      console.log(`Upload would exceed storage limit for user ${userId}. Current: ${storageCheck.totalSize}, New: ${totalItemSize}, Max: ${MAX_STORAGE_PER_CHATBOT}`);
+      
+      // Option 1: Reject the upload
+      if (req.query.rejectIfOverLimit === 'true') {
+        return res.status(413).json({
+          error: 'Storage limit exceeded',
+          details: `Upload would exceed your ${(MAX_STORAGE_PER_CHATBOT / (1024 * 1024)).toFixed(2)}MB storage limit`,
+          currentUsage: storageCheck.totalSize,
+          newItemSize: totalItemSize,
+          limit: MAX_STORAGE_PER_CHATBOT,
+          percentUsed: storageCheck.percentUsed
+        });
+      }
+      
+      // Option 2: Clean up old data to make room
+      console.log(`Attempting to clean up ${totalItemSize} bytes for user ${userId}`);
+      const cleanup = await cleanupOldestData(firebaseConfig.db, userId, totalItemSize);
+      
+      if (!cleanup.success) {
+        // Even after cleanup, there's not enough space
+        return res.status(413).json({
+          error: 'Storage limit exceeded',
+          details: `Unable to free up enough space for your upload. Please delete some existing data.`,
+          currentUsage: storageCheck.totalSize - cleanup.freedBytes,
+          newItemSize: totalItemSize,
+          limit: MAX_STORAGE_PER_CHATBOT,
+          freedBytes: cleanup.freedBytes,
+          deletedItems: cleanup.deletedCount
+        });
+      }
+      
+      console.log(`Successfully cleaned up ${cleanup.freedBytes} bytes by removing ${cleanup.deletedCount} items`);
+    }
+    
     // Create file record
     const fileRecord = {
       id: uuidv4(),
@@ -86,15 +132,31 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
       userId,
       storageUrl: `/uploads/${file.filename}`,
       textContent,
+      storageRef: `uploads/${file.filename}` // For storage reference
     };
     
-    // Save to in-memory database
+    // Save to database
+    if (firebaseConfig.db) {
+      await firebaseConfig.db.collection('uploads').doc(fileRecord.id).set(fileRecord);
+      console.log(`Saved file record to Firebase: ${fileRecord.id}`);
+    }
+    
+    // Also save to in-memory database for development
     db.uploads.push(fileRecord);
+    
+    // Get updated storage stats
+    const updatedStats = await calculateChatbotStorageSize(firebaseConfig.db, userId);
     
     res.status(200).json({
       message: 'File uploaded successfully',
       fileId: fileRecord.id,
       url: fileRecord.storageUrl,
+      storageStats: {
+        currentUsage: updatedStats.totalSize,
+        percentUsed: updatedStats.percentUsed,
+        remainingBytes: updatedStats.remainingSize,
+        limit: MAX_STORAGE_PER_CHATBOT
+      }
     });
   } catch (error) {
     console.error('Error uploading file:', error);
@@ -103,7 +165,7 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
 });
 
 // ===== TEXT INPUT ENDPOINT =====
-app.post('/api/text', (req, res) => {
+app.post('/api/text', async (req, res) => {
   try {
     const { text, userId } = req.body;
     
@@ -111,20 +173,81 @@ app.post('/api/text', (req, res) => {
       return res.status(400).json({ error: 'No text provided' });
     }
     
-    // Create text record
+    const userIdToUse = userId || 'anonymous';
+    
+    // Calculate text size
+    const textSize = getStringSizeInBytes(text);
+    
+    // Check storage limit for this user
+    const storageCheck = await checkStorageLimit(firebaseConfig.db, userIdToUse, textSize);
+    
+    if (storageCheck.wouldExceedLimit) {
+      console.log(`Text save would exceed storage limit for user ${userIdToUse}. Current: ${storageCheck.totalSize}, New: ${textSize}, Max: ${MAX_STORAGE_PER_CHATBOT}`);
+      
+      // Option 1: Reject if specified
+      if (req.query.rejectIfOverLimit === 'true') {
+        return res.status(413).json({
+          error: 'Storage limit exceeded',
+          details: `Text would exceed your ${(MAX_STORAGE_PER_CHATBOT / (1024 * 1024)).toFixed(2)}MB storage limit`,
+          currentUsage: storageCheck.totalSize,
+          newItemSize: textSize,
+          limit: MAX_STORAGE_PER_CHATBOT,
+          percentUsed: storageCheck.percentUsed
+        });
+      }
+      
+      // Option 2: Clean up old data to make room
+      console.log(`Attempting to clean up ${textSize} bytes for user ${userIdToUse}`);
+      const cleanup = await cleanupOldestData(firebaseConfig.db, userIdToUse, textSize);
+      
+      if (!cleanup.success) {
+        // Even after cleanup, there's not enough space
+        return res.status(413).json({
+          error: 'Storage limit exceeded',
+          details: `Unable to free up enough space for your text. Please delete some existing data.`,
+          currentUsage: storageCheck.totalSize - cleanup.freedBytes,
+          newItemSize: textSize,
+          limit: MAX_STORAGE_PER_CHATBOT,
+          freedBytes: cleanup.freedBytes,
+          deletedItems: cleanup.deletedCount
+        });
+      }
+      
+      console.log(`Successfully cleaned up ${cleanup.freedBytes} bytes by removing ${cleanup.deletedCount} items`);
+    }
+    
+    // Create text record with a preview for display
+    const preview = text.length > 100 ? `${text.substring(0, 100)}...` : text;
     const textRecord = {
       id: uuidv4(),
       text,
-      userId: userId || 'anonymous',
+      preview,
+      userId: userIdToUse,
       createdAt: new Date(),
+      byteSize: textSize
     };
     
-    // Save to in-memory database
+    // Save to Firebase
+    if (firebaseConfig.db) {
+      await firebaseConfig.db.collection('textInputs').doc(textRecord.id).set(textRecord);
+      console.log(`Saved text record to Firebase: ${textRecord.id}`);
+    }
+    
+    // Also save to in-memory database for development
     db.textInputs.push(textRecord);
+    
+    // Get updated storage stats
+    const updatedStats = await calculateChatbotStorageSize(firebaseConfig.db, userIdToUse);
     
     res.status(200).json({
       message: 'Text saved successfully',
       textId: textRecord.id,
+      storageStats: {
+        currentUsage: updatedStats.totalSize,
+        percentUsed: updatedStats.percentUsed,
+        remainingBytes: updatedStats.remainingSize,
+        limit: MAX_STORAGE_PER_CHATBOT
+      }
     });
   } catch (error) {
     console.error('Error saving text:', error);
@@ -141,6 +264,7 @@ app.post('/api/parse-website', async (req, res) => {
       return res.status(400).json({ error: 'No URL provided' });
     }
     
+    const userIdToUse = userId || 'anonymous';
     console.log(`Parsing website: ${url} with manipulation level: ${manipulationLevel || 'medium'}`);
     
     // Parse the website using our advanced parser
@@ -154,6 +278,54 @@ app.post('/api/parse-website', async (req, res) => {
     
     const parsedData = await parseWebsite(url, parseOptions);
     
+    // Calculate the size of the parsed content
+    const contentSize = getStringSizeInBytes(parsedData.parsedContent);
+    const metadataSize = getStringSizeInBytes(JSON.stringify(parsedData.metadata || {}));
+    const totalItemSize = contentSize + metadataSize;
+    
+    // Check storage limit for this user
+    const storageCheck = await checkStorageLimit(firebaseConfig.db, userIdToUse, totalItemSize);
+    
+    if (storageCheck.wouldExceedLimit) {
+      console.log(`Website parsing would exceed storage limit for user ${userIdToUse}. Current: ${storageCheck.totalSize}, New: ${totalItemSize}, Max: ${MAX_STORAGE_PER_CHATBOT}`);
+      
+      // Option 1: Reject if specified
+      if (req.query.rejectIfOverLimit === 'true') {
+        return res.status(413).json({
+          error: 'Storage limit exceeded',
+          details: `Website content would exceed your ${(MAX_STORAGE_PER_CHATBOT / (1024 * 1024)).toFixed(2)}MB storage limit`,
+          currentUsage: storageCheck.totalSize,
+          newItemSize: totalItemSize,
+          limit: MAX_STORAGE_PER_CHATBOT,
+          percentUsed: storageCheck.percentUsed
+        });
+      }
+      
+      // Option 2: Clean up old data to make room
+      console.log(`Attempting to clean up ${totalItemSize} bytes for user ${userIdToUse}`);
+      const cleanup = await cleanupOldestData(firebaseConfig.db, userIdToUse, totalItemSize);
+      
+      if (!cleanup.success) {
+        // Even after cleanup, there's not enough space
+        return res.status(413).json({
+          error: 'Storage limit exceeded',
+          details: `Unable to free up enough space for this website content. Please delete some existing data.`,
+          currentUsage: storageCheck.totalSize - cleanup.freedBytes,
+          newItemSize: totalItemSize,
+          limit: MAX_STORAGE_PER_CHATBOT,
+          freedBytes: cleanup.freedBytes,
+          deletedItems: cleanup.deletedCount
+        });
+      }
+      
+      console.log(`Successfully cleaned up ${cleanup.freedBytes} bytes by removing ${cleanup.deletedCount} items`);
+    }
+    
+    // Create a preview for display
+    const preview = parsedData.parsedContent.length > 150 
+      ? `${parsedData.parsedContent.substring(0, 150)}...` 
+      : parsedData.parsedContent;
+    
     // Create website record
     const websiteRecord = {
       id: uuidv4(),
@@ -162,14 +334,25 @@ app.post('/api/parse-website', async (req, res) => {
       originalContent: parsedData.originalContent,
       metadata: parsedData.metadata,
       manipulationLevel: parsedData.manipulationLevel,
-      userId: userId || 'anonymous',
+      userId: userIdToUse,
       parsedAt: new Date(),
+      byteSize: totalItemSize,
+      preview
     };
     
-    // Save to in-memory database
+    // Save to Firebase
+    if (firebaseConfig.db) {
+      await firebaseConfig.db.collection('websiteContent').doc(websiteRecord.id).set(websiteRecord);
+      console.log(`Saved website record to Firebase: ${websiteRecord.id}`);
+    }
+    
+    // Also save to in-memory database for development
     db.websiteContent.push(websiteRecord);
     
-    console.log(`Website parsed successfully. Content length: ${parsedData.parsedContent.length} characters`);
+    console.log(`Website parsed successfully. Content length: ${parsedData.parsedContent.length} characters, size: ${totalItemSize} bytes`);
+    
+    // Get updated storage stats
+    const updatedStats = await calculateChatbotStorageSize(firebaseConfig.db, userIdToUse);
     
     res.status(200).json({
       message: 'Website parsed successfully',
@@ -177,6 +360,12 @@ app.post('/api/parse-website', async (req, res) => {
       textLength: parsedData.parsedContent.length,
       manipulationLevel: parsedData.manipulationLevel,
       metadata: parsedData.metadata,
+      storageStats: {
+        currentUsage: updatedStats.totalSize,
+        percentUsed: updatedStats.percentUsed,
+        remainingBytes: updatedStats.remainingSize,
+        limit: MAX_STORAGE_PER_CHATBOT
+      }
     });
   } catch (error) {
     console.error('Error parsing website:', error);
@@ -356,7 +545,6 @@ app.post('/api/qa', async (req, res) => {
     // Always return a 200 response with an error message instead of a 500 error
     res.status(200).json({
       answer: 'Sorry, there was an error processing your request. Please try again later.',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });
@@ -395,6 +583,56 @@ app.post('/api/telegram/generate-key', (req, res) => {
     res.status(500).json({
       error: 'Failed to generate API key',
       message: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// ===== FLOWISE AI PRO VERSION ENDPOINT =====
+app.post('/api/start-flowise', (req, res) => {
+  try {
+    const { userId } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+    
+    console.log(`Starting Flowise AI for user ${userId}`);
+    
+    // Use PowerShell script to start Flowise
+    const scriptPath = path.resolve(__dirname, 'run-flowise.ps1');
+    
+    if (!fs.existsSync(scriptPath)) {
+      return res.status(500).json({ error: 'Flowise starter script not found' });
+    }
+    
+    // Start Flowise with PowerShell
+    const cmd = `powershell -ExecutionPolicy Bypass -File "${scriptPath}"`;
+    
+    console.log(`Executing command: ${cmd}`);
+    
+    const { exec } = require('child_process');
+    exec(cmd, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error starting Flowise: ${error.message}`);
+        return;
+      }
+      if (stderr) {
+        console.error(`Flowise stderr: ${stderr}`);
+      }
+      console.log(`Flowise stdout: ${stdout}`);
+    });
+    
+    res.status(200).json({
+      success: true,
+      message: 'Flowise AI startup requested',
+      url: 'http://localhost:3000'
+    });
+  } catch (error) {
+    console.error('Error starting Flowise:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to start Flowise',
+      message: error.message
     });
   }
 });
@@ -570,8 +808,51 @@ app.get('/api/data-sources', (req, res) => {
   }
 });
 
+// ===== STORAGE STATS ENDPOINT =====
+app.get('/api/storage-stats', async (req, res) => {
+  try {
+    const userId = req.query.userId || 'anonymous';
+    
+    // Get storage statistics
+    const storageInfo = await calculateChatbotStorageSize(firebaseAdmin.db, userId);
+    
+    res.status(200).json({
+      userId,
+      storageLimit: MAX_STORAGE_PER_CHATBOT,
+      currentUsage: storageInfo.totalSize,
+      percentUsed: storageInfo.percentUsed,
+      remainingBytes: storageInfo.remainingSize,
+      isOverLimit: storageInfo.isOverLimit,
+      breakdown: storageInfo.breakdown,
+      humanReadable: {
+        storageLimit: `${(MAX_STORAGE_PER_CHATBOT / (1024 * 1024)).toFixed(2)} MB`,
+        currentUsage: `${(storageInfo.totalSize / (1024 * 1024)).toFixed(2)} MB`,
+        remainingSpace: `${(storageInfo.remainingSize / (1024 * 1024)).toFixed(2)} MB`,
+        uploadsSize: `${(storageInfo.breakdown.uploads / (1024 * 1024)).toFixed(2)} MB`,
+        textInputsSize: `${(storageInfo.breakdown.textInputs / (1024 * 1024)).toFixed(2)} MB`,
+        websiteContentSize: `${(storageInfo.breakdown.websiteContent / (1024 * 1024)).toFixed(2)} MB`
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching storage stats:', error);
+    res.status(500).json({ error: 'Failed to fetch storage statistics', details: error.message });
+  }
+});
+
+// Add a health check endpoint
+app.get('/api/health-check', (req, res) => {
+  res.status(200).json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    services: {
+      api: 'operational',
+      database: firebaseAdmin.db ? 'connected' : 'disconnected'
+    }
+  });
+});
+
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running at http://localhost:${PORT}`);
   console.log(`API available at http://localhost:${PORT}/api`);
 });

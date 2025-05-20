@@ -143,6 +143,8 @@
     </div>
 </div>
 
+<!-- No auth check needed on signup page -->
+
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -303,7 +305,7 @@ window.signupWithGoogle = function() {
         });
 };
 
-// Create user profile in Firestore
+// Create user profile in Firestore with storage limits
 function createUserProfile(userId, userData) {
     if (!firebase.firestore) {
         console.error('Firestore is not available. User profile not created.');
@@ -313,6 +315,16 @@ function createUserProfile(userId, userData) {
     const db = firebase.firestore();
     return db.collection('users').doc(userId).set({
         ...userData,
+        // Add user profile metadata
+        displayName: userData.name || '',
+        photoURL: userData.photoURL || '',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+        // Initialize storage tracking for 1MB limit
+        storageUsed: 0,
+        storageLimit: 1048576, // 1MB in bytes
+        active: true,
+        // Add rug pull settings
         rugPullSettings: {
             defaultLevel: 'subtle',
             enabled: true
@@ -320,6 +332,21 @@ function createUserProfile(userId, userData) {
     })
     .then(function() {
         console.log('User profile created successfully!');
+        // Create initial collections for this user
+        const batch = db.batch();
+        
+        // Create metadata document to track data sources
+        const metadataRef = db.collection('userMetadata').doc(userId);
+        batch.set(metadataRef, {
+            userId: userId,
+            totalSources: 0,
+            totalStorageUsed: 0,
+            maxStorageLimit: 1048576, // 1MB in bytes
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        // Commit the batch
+        return batch.commit();
     })
     .catch(function(error) {
         console.error('Error creating user profile:', error);
@@ -328,31 +355,67 @@ function createUserProfile(userId, userData) {
     });
 }
 
-// Show alert message
+// Show alert message with improved styling
 function showAlert(message, type) {
     const alertElement = document.getElementById('alertMessage');
-    alertElement.className = 'alert alert-' + type;
-    alertElement.textContent = message;
+    
+    // Add different icons based on alert type
+    let icon = '';
+    switch(type) {
+        case 'success':
+            icon = '<i class="bi bi-check-circle-fill me-2"></i>';
+            break;
+        case 'danger':
+            icon = '<i class="bi bi-exclamation-triangle-fill me-2"></i>';
+            break;
+        case 'warning':
+            icon = '<i class="bi bi-exclamation-circle-fill me-2"></i>';
+            break;
+        case 'info':
+            icon = '<i class="bi bi-info-circle-fill me-2"></i>';
+            break;
+    }
+    
+    alertElement.className = 'alert alert-' + type + ' d-flex align-items-center';
+    alertElement.innerHTML = icon + message;
     alertElement.style.display = 'block';
+    
+    // Animate in
+    alertElement.style.opacity = '0';
+    alertElement.style.transform = 'translateY(-10px)';
+    alertElement.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    
+    setTimeout(() => {
+        alertElement.style.opacity = '1';
+        alertElement.style.transform = 'translateY(0)';
+    }, 10);
     
     // Auto-hide success alerts after 3 seconds
     if (type === 'success') {
         setTimeout(function() {
-            alertElement.style.display = 'none';
+            alertElement.style.opacity = '0';
+            alertElement.style.transform = 'translateY(-10px)';
+            setTimeout(() => {
+                alertElement.style.display = 'none';
+            }, 300);
         }, 3000);
     }
 }
 
 // Handle successful signup with redirect
 function handleSuccessfulSignup() {
-    // Check if there's a redirect URL stored
-    const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
-    
-    // Clear the redirect URL
-    sessionStorage.removeItem('redirectAfterLogin');
-    
-    // Redirect to the stored URL or main page
-    window.location.href = redirectUrl || 'main.html';
+  // Show success message before redirecting
+  showAlert('Account created successfully! Redirecting...', 'success');
+  
+  // Clear any auth check skipFlags
+  sessionStorage.removeItem('skipAuthCheck');
+  
+  // Get the return URL
+  const returnUrl = sessionStorage.getItem('returnTo');
+  sessionStorage.removeItem('returnTo');
+  
+  // Redirect to the return URL or main page
+  window.location.href = returnUrl || 'main.html';
 }
 </script>
 

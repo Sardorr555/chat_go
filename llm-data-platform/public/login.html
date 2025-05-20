@@ -130,6 +130,8 @@
     </div>
 </div>
 
+<!-- No auth check needed on login page -->
+
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -219,14 +221,31 @@ function resetLoginForm() {
 
 // Handle successful login with redirect
 function handleSuccessfulLogin() {
-    // Check if there's a redirect URL stored
-    const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+    // Set user logged in flag for auth checks
+    localStorage.setItem('userLoggedIn', 'true');
     
-    // Clear the redirect URL
+    // Store basic user data
+    const user = firebase.auth().currentUser;
+    if (user) {
+        const userData = {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName || ''
+        };
+        localStorage.setItem('userData', JSON.stringify(userData));
+    }
+    
+    // Clear any auth check skipFlags
+    sessionStorage.removeItem('skipAuthCheck');
+    
+    // Get the redirect URL from session storage
+    const redirectAfterLogin = sessionStorage.getItem('redirectAfterLogin');
     sessionStorage.removeItem('redirectAfterLogin');
     
-    // Redirect to the stored URL or main page
-    window.location.href = redirectUrl || 'main.html';
+    console.log('User logged in, redirecting to:', redirectAfterLogin || 'main.html');
+    
+    // Redirect to the return URL or main page
+    window.location.href = redirectAfterLogin || 'main.html';
 }
 
 // Google Login

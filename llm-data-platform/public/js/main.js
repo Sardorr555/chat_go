@@ -24,20 +24,35 @@ if (typeof firebase !== 'undefined') {
       console.log('Main.js: Using authenticated user ID:', userId);
       // Initialize the RugPullIntegrator for context manipulation
       initializeRugPullIntegrator(userId);
+      
+      // Initialize storage monitor with the user ID
+      if (typeof initializeStorageMonitor === 'function') {
+        initializeStorageMonitor(userId);
+      }
     } else {
       // Fallback - auth-check.js will handle redirection
       userId = localStorage.getItem('userId') || ("user_" + Math.random().toString(36).substring(2, 9));
       console.log('Main.js: Using fallback user ID:', userId);
+      
+      // Initialize storage monitor with fallback ID
+      if (typeof initializeStorageMonitor === 'function') {
+        initializeStorageMonitor(userId);
+      }
     }
   });
 } else {
   console.warn('Firebase is not available. Some features may not work.');
   // Fallback user ID if Firebase isn't available
   userId = localStorage.getItem('userId') || ("user_" + Math.random().toString(36).substring(2, 9));
+  
+  // Initialize storage monitor with fallback ID
+  if (typeof initializeStorageMonitor === 'function') {
+    initializeStorageMonitor(userId);
+  }
 }
 
-// API endpoint (using local Express server instead of Firebase Functions)
-const API_BASE_URL = 'http://localhost:3000/api';
+// API endpoints handled through the API handler module
+// Note: The base URL is defined in api-handler.js (http://localhost:3001/api)
 
 /**
  * Initialize the RugPullIntegrator for content manipulation
@@ -177,23 +192,36 @@ safeAddEventListener('fileUploadForm', 'submit', async (e) => {
   statusElement.innerHTML = '<div class="alert alert-info">Uploading file...</div>';
   
   try {
-    console.log('Uploading file to:', `${API_BASE_URL}/upload`);
-    const response = await fetch(`${API_BASE_URL}/upload`, {
-      method: 'POST',
-      body: formData,
-      // Don't set Content-Type header when sending FormData
-      // The browser will set it automatically with the correct boundary
-    });
+    console.log('Uploading file...');
+    statusElement.innerHTML = '<div class="alert alert-info">Uploading file...</div>';
     
-    console.log('Upload response status:', response.status);
-    const result = await response.json();
+    // Use the API handler for the file upload
+    const result = await window.api.uploadFile(formData);
     console.log('Upload response:', result);
     
-    if (response.ok) {
+    // Handle API response
+    if (!result.error) {
+      // Success
       statusElement.innerHTML = `<div class="alert alert-success">File uploaded successfully!</div>`;
       fileInput.value = '';
       refreshDataSources();
+      
+      // Update storage stats if available
+      if (result.storageStats && typeof updateStorageStatsFromResponse === 'function') {
+        updateStorageStatsFromResponse(result.storageStats);
+      }
+    } else if (result.error.includes('Storage limit exceeded') || result.error.includes('limit')) {
+      // Storage limit exceeded
+      statusElement.innerHTML = `
+        <div class="alert alert-danger">
+          <strong>Storage limit exceeded:</strong> ${result.details || 'You have reached your 1MB storage limit'}
+          <div class="mt-2 small">
+            <div>Current usage: ${formatBytes(result.currentUsage || 0)} / ${formatBytes(result.limit || 1048576)}</div>
+            <div>File size: ${formatBytes(result.newItemSize || 0)}</div>
+          </div>
+        </div>`;
     } else {
+      // Other API error
       statusElement.innerHTML = `<div class="alert alert-danger">Error: ${result.error}</div>`;
     }
   } catch (error) {
@@ -217,24 +245,33 @@ safeAddEventListener('textInputForm', 'submit', async (e) => {
   statusElement.innerHTML = '<div class="alert alert-info">Saving text...</div>';
   
   try {
-    const response = await fetch(`${API_BASE_URL}/text`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        text: textInput.value,
-        userId: userId,
-      }),
-    });
+    statusElement.innerHTML = '<div class="alert alert-info">Saving text...</div>';
     
-    const result = await response.json();
+    // Use the API handler for saving text
+    const result = await window.api.saveText(textInput.value);
     
-    if (response.ok) {
+    if (!result.error) {
+      // Success
       statusElement.innerHTML = `<div class="alert alert-success">Text saved successfully!</div>`;
       textInput.value = '';
       refreshDataSources();
+      
+      // Update storage stats if available
+      if (result.storageStats && typeof updateStorageStatsFromResponse === 'function') {
+        updateStorageStatsFromResponse(result.storageStats);
+      }
+    } else if (result.error.includes('Storage limit exceeded') || result.error.includes('limit')) {
+      // Storage limit exceeded
+      statusElement.innerHTML = `
+        <div class="alert alert-danger">
+          <strong>Storage limit exceeded:</strong> ${result.details || 'You have reached your 1MB storage limit'}
+          <div class="mt-2 small">
+            <div>Current usage: ${formatBytes(result.currentUsage || 0)} / ${formatBytes(result.limit || 1048576)}</div>
+            <div>Text size: ${formatBytes(result.newItemSize || 0)}</div>
+          </div>
+        </div>`;
     } else {
+      // Other API error
       statusElement.innerHTML = `<div class="alert alert-danger">Error: ${result.error}</div>`;
     }
   } catch (error) {
@@ -263,30 +300,16 @@ safeAddEventListener('websiteParseForm', 'submit', async (e) => {
   const targetTopics = Array.from(targetTopicsSelect.selectedOptions).map(option => option.value);
   
   statusElement.innerHTML = `<div class="alert alert-info">Parsing website with ${manipulationLevel} manipulation...</div>`;
-  
   try {
     console.log('Parsing website:', urlInput.value);
     console.log('Manipulation level:', manipulationLevel);
     console.log('Target topics:', targetTopics);
     
-    const response = await fetch(`${API_BASE_URL}/parse-website`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        url: urlInput.value,
-        userId: userId,
-        manipulationLevel: manipulationLevel,
-        targetTopics: targetTopics.length > 0 ? targetTopics : undefined
-      }),
-    });
-    
-    console.log('Parse response status:', response.status);
-    const result = await response.json();
+    // Use the API handler for website parsing
+    const result = await window.api.parseWebsite(urlInput.value, manipulationLevel, targetTopics.length > 0 ? targetTopics : undefined);
     console.log('Parse result:', result);
     
-    if (response.ok) {
+    if (!result.error) {
       let successMessage = `<div class="alert alert-success">
         <h5>Website parsed successfully!</h5>
         <p>Extracted ${result.textLength} characters with ${result.manipulationLevel} manipulation.</p>`;
@@ -306,11 +329,37 @@ safeAddEventListener('websiteParseForm', 'submit', async (e) => {
         successMessage += `</ul>`;
       }
       
+      // Add storage information if available
+      if (result.storageStats) {
+        const percentUsed = Math.round(result.storageStats.percentUsed);
+        const storageClass = percentUsed > 80 ? 'text-danger' : (percentUsed > 60 ? 'text-warning' : 'text-success');
+        
+        successMessage += `<p class="mt-2 ${storageClass}">
+          <strong>Storage:</strong> ${formatBytes(result.storageStats.currentUsage)} / ${formatBytes(result.storageStats.limit)}
+          (${percentUsed}% used)
+        </p>`;
+      }
+      
       successMessage += `</div>`;
       
       statusElement.innerHTML = successMessage;
       urlInput.value = '';
       refreshDataSources();
+      
+      // Update storage stats if available
+      if (result.storageStats && typeof updateStorageStatsFromResponse === 'function') {
+        updateStorageStatsFromResponse(result.storageStats);
+      }
+    } else if (result.error.includes('Storage limit exceeded') || result.error.includes('limit')) {
+      // Storage limit exceeded
+      statusElement.innerHTML = `
+        <div class="alert alert-danger">
+          <strong>Storage limit exceeded:</strong> ${result.details || 'You have reached your 1MB storage limit'}
+          <div class="mt-2 small">
+            <div>Current usage: ${formatBytes(result.currentUsage)} / ${formatBytes(result.limit)}</div>
+            <div>Content size: ${formatBytes(result.newItemSize)}</div>
+          </div>
+        </div>`;
     } else {
       statusElement.innerHTML = `<div class="alert alert-danger">Error: ${result.error}</div>`;
     }
@@ -378,10 +427,16 @@ safeAddEventListener('qaForm', 'submit', async (e) => {
 // ===== DATA SOURCES SECTION =====
 async function refreshDataSources() {
   try {
-    const response = await fetch(`${API_BASE_URL}/data-sources?userId=${userId}`);
-    const data = await response.json();
+    // Check if server is available
+    if (!window.api.isServerAvailable()) {
+      console.log('Server not available, skipping data sources refresh');
+      return;
+    }
     
-    if (response.ok) {
+    // Use API handler to get data sources
+    const data = await window.api.getDataSources();
+    
+    if (!data.error) {
       // Update Files list
       const filesList = document.getElementById('filesList');
       filesList.innerHTML = '';
@@ -446,8 +501,11 @@ async function refreshDataSources() {
 // Refresh data sources on page load
 document.addEventListener('DOMContentLoaded', refreshDataSources);
 
-// Refresh button
-document.getElementById('refreshDataSources').addEventListener('click', refreshDataSources);
+// Refresh button - safely add event listener
+const refreshButton = document.getElementById('refreshDataSources');
+if (refreshButton) {
+  refreshButton.addEventListener('click', refreshDataSources);
+}
 
 // Display user ID for reference
 console.log('Using temporary user ID:', userId);
@@ -473,14 +531,10 @@ document.getElementById('agentLogo').addEventListener('change', async (e) => {
     
     try {
       // Upload the logo
-      const response = await fetch(`${API_BASE_URL}/upload-logo`, {
-        method: 'POST',
-        body: formData,
-      });
+      const result = await window.api.uploadLogo(formData);
+      console.log('Logo upload response:', result);
       
-      const result = await response.json();
-      
-      if (response.ok) {
+      if (!result.error) {
         // Store the logo URL for later use
         uploadedLogoUrl = result.logoUrl;
         
@@ -541,25 +595,14 @@ safeAddEventListener('createAgentForm', 'submit', async (e) => {
   try {
     console.log('Creating agent with settings:', settings);
     
-    const response = await fetch(`${API_BASE_URL}/create-agent`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        userId,
-        settings
-      }),
-    });
+    const response = await window.api.createAgent(settings);
+    console.log('Agent creation response:', response);
     
-    console.log('Agent creation response status:', response.status);
-    const result = await response.json();
-    
-    if (response.ok) {
+    if (!response.error) {
       // Show success message
       statusElement.innerHTML = `<div class="alert alert-success">
         <h5>Agent created successfully!</h5>
-        <p>Your agent ID is: ${result.agentId}</p>
+        <p>Your agent ID is: ${response.agentId}</p>
         <p>Copy the script tag below to integrate the agent into your website.</p>
       </div>`;
       
@@ -567,13 +610,13 @@ safeAddEventListener('createAgentForm', 'submit', async (e) => {
       document.getElementById('agentCodeSnippets').classList.remove('d-none');
       
       // Populate script code and instructions
-      document.getElementById('scriptCodeSnippet').textContent = result.scriptCode;
-      document.getElementById('instructionsContent').innerHTML = marked.parse(result.instructions);
+      document.getElementById('scriptCodeSnippet').textContent = response.scriptCode;
+      document.getElementById('instructionsContent').innerHTML = marked.parse(response.instructions);
       
       // Setup copy buttons
       setupCopyButtons();
     } else {
-      statusElement.innerHTML = `<div class="alert alert-danger">Error: ${result.error || 'Failed to create agent'}</div>`;
+      statusElement.innerHTML = `<div class="alert alert-danger">Error: ${response.error || 'Failed to create agent'}</div>`;
     }
   } catch (error) {
     console.error('Agent creation error:', error);
@@ -619,23 +662,14 @@ safeAddEventListener('generateApiKey', 'click', async () => {
     button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...';
     
     // Call API to generate key
-    const response = await fetch(`${API_BASE_URL}/telegram/generate-key`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        userId
-      }),
-    });
+    const response = await window.api.generateApiKey();
+    console.log('API key generation response:', response);
     
-    const result = await response.json();
-    
-    if (response.ok) {
+    if (!response.error) {
       // Show API key details
-      document.getElementById('displayApiKey').textContent = result.displayKey;
-      document.getElementById('botCodeSnippet').textContent = result.botCode;
-      document.getElementById('setupInstructionsContent').innerHTML = marked.parse(result.setupInstructions);
+      document.getElementById('displayApiKey').textContent = response.displayKey;
+      document.getElementById('botCodeSnippet').textContent = response.botCode;
+      document.getElementById('setupInstructionsContent').innerHTML = marked.parse(response.setupInstructions);
       
       // Show the details section
       apiKeyDetails.classList.remove('d-none');
@@ -649,7 +683,7 @@ safeAddEventListener('generateApiKey', 'click', async () => {
       // Scroll to the API key details
       apiKeyDetails.scrollIntoView({ behavior: 'smooth' });
     } else {
-      alert(`Error generating API key: ${result.error || 'Unknown error'}`);
+      alert(`Error generating API key: ${response.error || 'Unknown error'}`);
     }
   } catch (error) {
     console.error('Error generating API key:', error);
@@ -671,10 +705,10 @@ async function refreshApiKeys() {
     apiKeysList.innerHTML = '<p class="text-center"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...</p>';
     
     // Fetch API keys
-    const response = await fetch(`${API_BASE_URL}/telegram/keys?userId=${userId}`);
-    const data = await response.json();
+    const data = await window.api.getApiKeys();
+    console.log('API keys response:', data);
     
-    if (response.ok) {
+    if (!data.error) {
       if (data.apiKeys && data.apiKeys.length > 0) {
         // Display API keys
         apiKeysList.innerHTML = '';
@@ -763,9 +797,31 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('Page initialization complete');
 });
 
+/**
+ * Format bytes to a human-readable format
+ * @param {number} bytes - The bytes to format
+ * @param {number} decimals - Number of decimal places to show
+ * @returns {string} - Formatted string
+ */
+function formatBytes(bytes, decimals = 2) {
+  if (bytes === 0) return '0 Bytes';
+  
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
 // Update source counts on all pages
 function updateSourceCounts() {
-  // Find all elements with filesCount, textsCount, websitesCount, and totalSize IDs
+  if (!window.rugPullUserContext) {
+    console.warn('Cannot update source counts: RugPullUserContext not initialized');
+    return;
+  }
+  
   const filesCountElements = document.querySelectorAll('#filesCount');
   const textsCountElements = document.querySelectorAll('#textsCount');
   const websitesCountElements = document.querySelectorAll('#websitesCount');
