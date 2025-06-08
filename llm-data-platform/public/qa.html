@@ -226,6 +226,11 @@
     </style>
 </head>
 <body>
+    <!-- Warning Banner - Test Mode Only -->
+    <div style="background-color: #ffeeee; border: 2px solid #ff0000; color: #ff0000; padding: 10px; text-align: center; font-weight: bold; margin-bottom: 10px;">
+        ⚠️ WARNING: This application is in TEST MODE ONLY and should not be used in production deployments! ⚠️
+    </div>
+
     <!-- Mobile Header (visible only on small screens) -->
     <div class="mobile-header d-md-none">
         <button class="sidebar-toggle">
@@ -245,17 +250,13 @@
                     </button>
                 </div>
                 
-                <a href="main.html" class="sidebar-item">
-                    <i class="bi bi-plus-circle"></i> <span>Create Agent</span>
-                </a>
+                <!-- Create Agent link removed from sidebar -->
                 
                 <a href="bots.html" class="sidebar-item">
                     <i class="bi bi-robot"></i> <span>My Bots</span>
                 </a>
                 
-                <a href="account.html" class="sidebar-item">
-                    <i class="bi bi-person-circle"></i> <span>My Account</span>
-                </a>
+
                 <a href="files.html" class="sidebar-item">
                     <i class="bi bi-file-earmark"></i> <span>Files</span>
                 </a>

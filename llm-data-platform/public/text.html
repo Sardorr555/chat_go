@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text - LLM Data Platform</title>
+    <title>Text Input - LLM Data Platform</title>
+    <!-- Create Agent Modal CSS -->
+    <link rel="stylesheet" href="css/create-agent-modal.css">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -115,6 +117,11 @@
     </style>
 </head>
 <body>
+    <!-- Warning Banner - Test Mode Only -->
+    <div style="background-color: #ffeeee; border: 2px solid #ff0000; color: #ff0000; padding: 10px; text-align: center; font-weight: bold; margin-bottom: 10px;">
+        ⚠️ WARNING: This application is in TEST MODE ONLY and should not be used in production deployments! ⚠️
+    </div>
+
     <!-- Mobile Header (visible only on small screens) -->
     <div class="mobile-header d-md-none">
         <button class="sidebar-toggle">
@@ -134,17 +141,13 @@
                     </button>
                 </div>
                 
-                <a href="main.html" class="sidebar-item">
-                    <i class="bi bi-plus-circle"></i> <span>Create Agent</span>
-                </a>
+                <!-- Create Agent link removed from sidebar -->
                 
                 <a href="bots.html" class="sidebar-item">
                     <i class="bi bi-robot"></i> <span>My Bots</span>
                 </a>
                 
-                <a href="account.html" class="sidebar-item">
-                    <i class="bi bi-person-circle"></i> <span>My Account</span>
-                </a>
+
                 <a href="files.html" class="sidebar-item">
                     <i class="bi bi-file-earmark"></i> <span>Files</span>
                 </a>
@@ -205,16 +208,195 @@
     <!-- Super simple auth check -->
     <script src="js/auth-super-simple.js"></script>
 
+    <!-- Create Agent Button -->
+    <button class="create-agent-btn" id="createAgentFloatingBtn" type="button" data-bs-toggle="modal" data-bs-target="#createAgentModal">
+        Create Agent
+        <div class="source-info" id="sourceInfoBadge">
+            <i class="bi bi-database"></i>
+            <span id="totalSourcesCount">0</span> sources
+        </div>
+    </button>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    
+    <!-- Firebase Initialization -->
+    <script src="js/firebase-init.js"></script>
     <!-- Authentication Check -->
     <script src="js/auth-check.js"></script>
+<script src="js/create-agent-modal.js"></script>
+
+<script>
+    // Initialize the Create Agent Modal when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        initCreateAgentModal();
+    });
+</script>
     <!-- Platform Common JS -->
     <script src="js/platform-common.js"></script>
     <!-- Custom JS -->
     <script src="js/main.js"></script>
+    
+    <!-- Text Page Specific JS -->
+    <script>
+    // Use variables that don't conflict with globals
+    let textPageDb;
+    let textPageUserId; // Will be set by Firebase Auth - different name to avoid conflicts
+    
+    // API endpoint
+    const API_BASE_URL = 'http://localhost:3002/api';
+    
+    // Initialize Firebase if not already initialized
+    function initializeFirebase() {
+      // Firebase configuration
+      const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT_ID.appspot.com",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID"
+      };
+      
+      // Check if Firebase app is already initialized
+      try {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+        }
+        return true;
+      } catch (error) {
+        console.error('Firebase initialization error:', error);
+        return false;
+      }
+    }
+    
+    if (typeof firebase !== 'undefined' && initializeFirebase()) {
+      textPageDb = firebase.firestore();
+      
+      // Use Firebase Authentication to get the user ID
+      firebase.auth().onAuthStateChanged(function(user) {
+        if (user) {
+          // User is signed in
+          textPageUserId = user.uid;
+          console.log('Text page: Using authenticated user ID:', textPageUserId);
+          // Load user's saved texts
+          loadUserTexts();
+        } else {
+          // Fallback - auth-check.js will handle redirection
+          textPageUserId = localStorage.getItem('userId');
+          console.log('Text page: Using fallback user ID:', textPageUserId);
+        }
+      });
+    } else {
+      console.warn('Firebase is not available. Some features may not work.');
+      // Fallback user ID if Firebase isn't available
+      textPageUserId = localStorage.getItem('userId') || ("user_" + Math.random().toString(36).substring(2, 9));
+    }
+    
+    // Handle text input form submission
+    document.getElementById('textInputForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const textInput = document.getElementById('textInput');
+      const statusElement = document.getElementById('textInputStatus');
+      
+      if (!textInput.value.trim()) {
+        statusElement.innerHTML = '<div class="alert alert-warning">Please enter some text</div>';
+        return;
+      }
+      
+      const textData = {
+        content: textInput.value,
+        userId: textPageUserId,
+        timestamp: new Date().toISOString()
+      };
+      
+      statusElement.innerHTML = '<div class="alert alert-info">Saving text...</div>';
+      
+      try {
+        console.log('Saving text to:', `${API_BASE_URL}/text`);
+        const response = await fetch(`${API_BASE_URL}/text`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(textData),
+        });
+        
+        console.log('Text save response status:', response.status);
+        const result = await response.json();
+        console.log('Text save response:', result);
+        
+        if (response.ok) {
+          statusElement.innerHTML = `<div class="alert alert-success">Text saved successfully!</div>`;
+          textInput.value = '';
+          refreshTextsList();
+        } else {
+          statusElement.innerHTML = `<div class="alert alert-danger">Error: ${result.error}</div>`;
+        }
+      } catch (error) {
+        console.error('Text save error:', error);
+        statusElement.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+      }
+    });
+    
+    // Load user's texts
+    function loadUserTexts() {
+      // Refresh the text list to display the authenticated user's texts
+      refreshTextsList();
+    }
+    
+    // Refresh texts list
+    async function refreshTextsList() {
+      try {
+        const textsList = document.getElementById('textsList');
+        textsList.innerHTML = '<p class="text-center"><span class="spinner-border spinner-border-sm" role="status"></span> Loading...</p>';
+        
+        const response = await fetch(`${API_BASE_URL}/texts?userId=${textPageUserId}`);
+        const data = await response.json();
+        
+        if (response.ok) {
+          const texts = data.texts || [];
+          
+          if (texts.length === 0) {
+            textsList.innerHTML = '<p class="text-muted">No text inputs saved yet.</p>';
+            return;
+          }
+          
+          let textsHTML = '';
+          texts.forEach(text => {
+            const textDate = new Date(text.timestamp).toLocaleString();
+            const previewText = text.content.length > 100 ? text.content.substring(0, 100) + '...' : text.content;
+            
+            textsHTML += `
+              <div class="data-source-item">
+                <div>
+                  <i class="bi bi-text-paragraph me-2"></i>
+                  <strong>Text Input</strong>
+                </div>
+                <div class="text-muted mt-2">${previewText}</div>
+                <div class="text-muted small mt-1">Saved: ${textDate}</div>
+              </div>
+            `;
+          });
+          
+          textsList.innerHTML = textsHTML;
+        } else {
+          textsList.innerHTML = `<div class="alert alert-danger">Error: ${data.error || 'Failed to load texts'}</div>`;
+        }
+      } catch (error) {
+        console.error('Error fetching texts:', error);
+        document.getElementById('textsList').innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+      }
+    }
+    
+    // Load texts on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      refreshTextsList();
+    });
+    </script>
 </body>
 </html>

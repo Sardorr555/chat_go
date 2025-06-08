@@ -1,0 +1,85 @@
+/* Create Agent Modal and Button Styles */
+
+.create-agent-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.create-agent-btn:hover {
+    background-color: var(--primary-dark);
+    transform: scale(1.1);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+}
+
+.create-agent-btn:active {
+    transform: scale(0.95);
+}
+
+/* Add data source summary styles */
+.create-agent-btn .source-info {
+    margin-left: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+}
+
+.create-agent-btn .source-info i {
+    margin-right: 4px;
+    font-size: 14px;
+}
+
+/* Temperature display styling */
+.temperature-labels {
+    margin-top: 5px;
+    font-size: 0.85rem;
+}
+
+.temperature-labels i {
+    margin-right: 4px;
+}
+
+/* Data Source Count Styles */
+.data-source-count {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--light-bg-color);
+    border-radius: 8px;
+    padding: 10px 15px;
+    width: 80px;
+    text-align: center;
+}
+
+.data-source-count i {
+    font-size: 24px;
+    color: var(--primary-color);
+    margin-bottom: 5px;
+}
+
+.data-source-count span {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.data-source-count div {
+    font-size: 12px;
+    color: var(--text-muted);
+}

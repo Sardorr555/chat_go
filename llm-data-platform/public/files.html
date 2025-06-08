@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Files - LLM Data Platform</title>
+    <!-- Create Agent Modal CSS -->
+    <link rel="stylesheet" href="css/create-agent-modal.css">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -117,6 +119,11 @@
     </style>
 </head>
 <body>
+    <!-- Warning Banner - Test Mode Only -->
+    <div style="background-color: #ffeeee; border: 2px solid #ff0000; color: #ff0000; padding: 10px; text-align: center; font-weight: bold; margin-bottom: 10px;">
+        ⚠️ WARNING: This application is in TEST MODE ONLY and should not be used in production deployments! ⚠️
+    </div>
+
     <!-- Mobile Header (visible only on small screens) -->
     <div class="mobile-header d-md-none">
         <button class="sidebar-toggle">
@@ -136,16 +143,12 @@
                     </button>
                 </div>
                 
-                <a href="main.html" class="sidebar-item">
-                    <i class="bi bi-plus-circle"></i> <span>Create Agent</span>
-                </a>
+                <!-- Create Agent link removed from sidebar -->
                 <a href="bots.html" class="sidebar-item">
                     <i class="bi bi-robot"></i> <span>My Bots</span>
                 </a>
                 
-                <a href="account.html" class="sidebar-item">
-                    <i class="bi bi-person-circle"></i> <span>My Account</span>
-                </a>
+
                 <a href="files.html" class="sidebar-item active">
                     <i class="bi bi-file-earmark"></i> <span>Files</span>
                 </a>
@@ -202,28 +205,35 @@
     <!-- Super simple auth check -->
     <script src="js/auth-super-simple.js"></script>
 
+    <!-- Create Agent Button -->
+    <button class="create-agent-btn" id="createAgentFloatingBtn" type="button" data-bs-toggle="modal" data-bs-target="#createAgentModal">
+        Create Agent
+        <div class="source-info" id="sourceInfoBadge">
+            <i class="bi bi-database"></i>
+            <span id="totalSourcesCount">0</span> sources
+        </div>
+    </button>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    
+    <!-- Firebase Initialization -->
+    <script src="js/firebase-init.js"></script>
     <!-- Authentication Check -->
     <script src="js/auth-check.js"></script>
-    
-    <!-- Initialize Firebase -->
+    <script src="js/create-agent-modal.js"></script>
+
     <script>
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
-    
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
+    // Initialize the Create Agent Modal when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        initCreateAgentModal();
+    });
     </script>
+
+    <!-- Firebase initialization moved to firebase-init.js -->
     
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -231,36 +241,12 @@
     <script src="js/platform-common.js"></script>
     <!-- Custom JS -->
     <script>
+    // API endpoint
+    const API_BASE_URL = 'http://localhost:3002/api';
+    
     // Firebase references
     let db, storage;
     let userId; // Will be set by Firebase Auth
-    
-    if (typeof firebase !== 'undefined') {
-      db = firebase.firestore();
-      storage = firebase.storage();
-      
-      // Use Firebase Authentication to get the user ID
-      firebase.auth().onAuthStateChanged(function(user) {
-        if (user) {
-          // User is signed in
-          userId = user.uid;
-          console.log('Files page: Using authenticated user ID:', userId);
-          // Update UI with user's files
-          loadUserFiles();
-        } else {
-          // Fallback - auth-check.js will handle redirection
-          userId = localStorage.getItem('userId');
-          console.log('Files page: Using fallback user ID:', userId);
-        }
-      });
-    } else {
-      console.warn('Firebase is not available. Some features may not work.');
-      // Fallback user ID if Firebase isn't available
-      userId = localStorage.getItem('userId') || ("user_" + Math.random().toString(36).substring(2, 9));
-    }
-    
-    // API endpoint
-    const API_BASE_URL = 'http://localhost:3000/api';
     
     // Setup file upload button
     document.getElementById('browseFilesBtn').addEventListener('click', function() {
@@ -289,7 +275,7 @@
       const file = fileInput.files[0];
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('userId', userId);
+      formData.append('userId', userId || localStorage.getItem('userId') || 'anonymous');
       
       statusElement.innerHTML = '<div class="alert alert-info">Uploading file...</div>';
       
@@ -358,71 +344,125 @@
       }
     }
     
-    // Load user's files after authentication
-    async function loadUserFiles() {
-      // Refresh the file list to display the authenticated user's files
-      refreshFilesList();
-    }
-    
     // Refresh files list
     async function refreshFilesList() {
       try {
         const filesList = document.getElementById('filesList');
         filesList.innerHTML = '<p class="text-center"><span class="spinner-border spinner-border-sm" role="status"></span> Loading...</p>';
         
-        const response = await fetch(`${API_BASE_URL}/data-sources?userId=${userId}`);
+        const userIdToUse = userId || localStorage.getItem('userId') || 'anonymous';
+        const response = await fetch(`${API_BASE_URL}/data-sources?userId=${userIdToUse}`);
         const data = await response.json();
         
-        if (response.ok) {
-          const files = data.uploads || [];
-          
-          if (files.length === 0) {
-            filesList.innerHTML = '<p class="text-muted">No files uploaded yet.</p>';
-            return;
-          }
-          
-          let filesHTML = '';
-          files.forEach(file => {
-            const fileSize = formatFileSize(file.size);
-            const fileDate = new Date(file.timestamp).toLocaleString();
+        if (response.ok && data.uploads && data.uploads.length > 0) {
+          // Format and display files
+          let html = '';
+          data.uploads.forEach(file => {
+            const fileSize = formatFileSize(file.size || 0);
+            const uploadDate = new Date(file.uploadedAt).toLocaleDateString();
             
-            filesHTML += `
-              <div class="data-source-item">
-                <div class="d-flex justify-content-between align-items-center">
+            html += `
+              <div class="data-source-item d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                  <i class="bi bi-file-earmark me-3 fs-4"></i>
                   <div>
-                    <i class="bi bi-file-earmark me-2"></i>
-                    <strong>${file.name}</strong>
+                    <div class="fw-medium">${file.fileName}</div>
+                    <div class="text-muted small">${fileSize} • ${uploadDate}</div>
                   </div>
-                  <span class="badge bg-secondary">${fileSize}</span>
                 </div>
-                <div class="text-muted small mt-1">Uploaded: ${fileDate}</div>
+                <div>
+                  <button class="btn btn-sm btn-outline-danger" onclick="deleteFile('${file.id}')">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
               </div>
             `;
           });
           
-          filesList.innerHTML = filesHTML;
+          filesList.innerHTML = html;
         } else {
-          filesList.innerHTML = `<div class="alert alert-danger">Error: ${data.error || 'Failed to load files'}</div>`;
+          filesList.innerHTML = '<p class="text-muted">No files uploaded yet.</p>';
         }
       } catch (error) {
         console.error('Error fetching files:', error);
-        document.getElementById('filesList').innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+        const filesList = document.getElementById('filesList');
+        filesList.innerHTML = '<div class="alert alert-danger">Error loading files. Please try again later.</div>';
       }
     }
     
+    // Delete a file
+    async function deleteFile(fileId) {
+      if (!confirm('Are you sure you want to delete this file?')) return;
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/delete-file/${fileId}?userId=${userId || localStorage.getItem('userId')}`, {
+          method: 'DELETE'
+        });
+        
+        if (response.ok) {
+          // Refresh the files list
+          refreshFilesList();
+        } else {
+          const result = await response.json();
+          alert(`Error: ${result.error || 'Could not delete file'}`);
+        }
+      } catch (error) {
+        console.error('Error deleting file:', error);
+        alert(`Error: ${error.message}`);
+      }
+    }
+    
+    // Format file size to human-readable format
     function formatFileSize(bytes) {
       if (bytes === 0) return '0 Bytes';
       
       const k = 1024;
-      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
       const i = Math.floor(Math.log(bytes) / Math.log(k));
       
       return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
     
-    // Load files on page load
+    // Wait for Firebase to be initialized before using Firebase services
+    window.addEventListener('firebaseInitialized', function() {
+      console.log('Firebase ready in files.html');
+      
+      try {
+        db = firebase.firestore();
+        storage = firebase.storage();
+        
+        // Use Firebase Authentication to get the user ID
+        firebase.auth().onAuthStateChanged(function(user) {
+          if (user) {
+            // User is signed in
+            userId = user.uid;
+            console.log('Files page: Using authenticated user ID:', userId);
+            refreshFilesList();
+          } else {
+            // User is not signed in, use local storage fallback
+            userId = localStorage.getItem('userId') || ("user_" + Math.random().toString(36).substring(2, 9));
+            localStorage.setItem('userId', userId);
+            console.log('Files page: Using local user ID:', userId);
+            refreshFilesList();
+          }
+        });
+      } catch (error) {
+        console.error('Error initializing Firebase in files.html:', error);
+        // Fallback user ID if Firebase isn't available
+        userId = localStorage.getItem('userId') || ("user_" + Math.random().toString(36).substring(2, 9));
+        localStorage.setItem('userId', userId);
+        console.log('Files page: Using fallback user ID due to error:', userId);
+        refreshFilesList();
+      }
+    });
+    
+    // Initialize when document is ready
     document.addEventListener('DOMContentLoaded', () => {
-      refreshFilesList();
+      // If Firebase is already initialized, this will run immediately
+      if (window.firebaseInitialized) {
+        console.log('Firebase already initialized, refreshing file list');
+        refreshFilesList();
+      }
     });
     </script>
 </body>

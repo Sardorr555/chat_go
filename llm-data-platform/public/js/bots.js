@@ -4,14 +4,21 @@
  * with rug pull capabilities for manipulating context
  */
 
-// Firebase references should be initialized in the HTML
+// Firebase references will be initialized when Firebase is ready
 let db, storage;
-if (typeof firebase !== 'undefined') {
+
+// Wait for Firebase to be initialized (from firebase-init.js)
+window.addEventListener('firebaseInitialized', function() {
+  // Now it's safe to use Firebase services
   db = firebase.firestore();
   storage = firebase.storage();
-} else {
-  console.warn('Firebase is not available. Some features may not work.');
-}
+  console.log('Firebase services initialized in bots.js');
+  
+  // Reload data after Firebase is initialized
+  if (document.readyState === 'complete') {
+    loadBots();
+  }
+});
 
 // Use Firebase Authentication for user identification
 let userId;

@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Agent - LLM Data Platform</title>
+    <title>Redirecting - LLM Data Platform</title>
+    <meta http-equiv="refresh" content="0; URL=bots.html">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -458,12 +459,29 @@
     </style>
 </head>
 <body>
+    <!-- Warning Banner - Test Mode Only -->
+    <div style="background-color: #ffeeee; border: 2px solid #ff0000; color: #ff0000; padding: 10px; text-align: center; font-weight: bold; margin-bottom: 10px;">
+        ⚠️ WARNING: This application is in TEST MODE ONLY and should not be used in production deployments! ⚠️
+    </div>
+    <div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column;">
+        <h1>Redirecting to Bots Page...</h1>
+        <p>If you are not redirected automatically, <a href="bots.html">click here</a>.</p>
+        <div class="spinner-border text-primary mt-3" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+    
+    <script>
+        // Redirect to bots page
+        window.location.href = 'bots.html';
+    </script>
+
     <!-- Mobile Header (visible only on small screens) -->
     <div class="mobile-header d-md-none">
         <button class="sidebar-toggle">
             <i class="bi bi-list"></i>
         </button>
-        <h5>LLM Data Platform</h5>
+        
     </div>
 
     <div class="container-fluid p-0">
@@ -471,7 +489,7 @@
             <!-- Sidebar -->
             <div class="sidebar">
                 <div class="sidebar-header">
-                    <h5>LLM Data Platform</h5>
+                  
                     <button class="sidebar-toggle d-none d-md-block d-lg-none">
                         <i class="bi bi-arrow-left"></i>
                     </button>
@@ -484,9 +502,7 @@
                     <i class="bi bi-robot"></i> <span>My Bots</span>
                 </a>
                 
-                <a href="account.html" class="sidebar-item">
-                    <i class="bi bi-person-circle"></i> <span>My Account</span>
-                </a>
+
                 <a href="files.html" class="sidebar-item">
                     <i class="bi bi-file-earmark"></i> <span>Files</span>
                 </a>
@@ -503,20 +519,13 @@
                 <a href="documentation.html" class="sidebar-item">
                     <i class="bi bi-book"></i> <span>Documentation</span>
                 </a>
-                <a href="#" class="sidebar-item" id="sidebarProBtn">
-                    <i class="bi bi-crown"></i> <span>Pro Version</span>
-                </a>
+              
             </div>
             
             <!-- Main Content Area -->
             <div class="main-content">
                 <!-- Pro/Standard Version Buttons -->
-                <div class="d-flex justify-content-center mb-4">
-                    <a href="main.html" class="btn btn-light me-3 px-5">Standard</a>
-                    <button id="openFlowiseBtn" class="btn btn-dark px-5">
-                        <i class="bi bi-crown"></i> Pro Version
-                    </button>
-                </div>
+                
                 
                 <!-- Create Agent Section -->
                 <div class="header">

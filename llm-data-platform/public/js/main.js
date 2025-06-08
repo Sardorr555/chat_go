@@ -12,9 +12,38 @@ function safeAddEventListener(elementId, eventType, handler) {
   }
 }
 
-if (typeof firebase !== 'undefined') {
-  db = firebase.firestore();
-  storage = firebase.storage();
+// Initialize Firebase if needed
+function initializeFirebase() {
+  // Firebase configuration
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+  
+  // Check if Firebase app is already initialized
+  try {
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+      console.log('Firebase initialized successfully in main.js');
+    }
+    return true;
+  } catch (error) {
+    console.error('Firebase initialization error in main.js:', error);
+    return false;
+  }
+}
+
+if (typeof firebase !== 'undefined' && initializeFirebase()) {
+  try {
+    db = firebase.firestore();
+    storage = firebase.storage();
+  } catch (error) {
+    console.error('Error accessing Firebase services:', error);
+  }
   
   // Use Firebase Authentication to get the user ID
   firebase.auth().onAuthStateChanged(function(user) {
@@ -52,7 +81,7 @@ if (typeof firebase !== 'undefined') {
 }
 
 // API endpoints handled through the API handler module
-// Note: The base URL is defined in api-handler.js (http://localhost:3001/api)
+// Note: The base URL is defined in api-handler.js (http://localhost:3002/api)
 
 /**
  * Initialize the RugPullIntegrator for content manipulation
@@ -425,16 +454,50 @@ safeAddEventListener('qaForm', 'submit', async (e) => {
 });
 
 // ===== DATA SOURCES SECTION =====
+// Simple API wrapper to handle server calls safely
+const api = {
+  // Check if server is available
+  isServerAvailable: async function() {
+    try {
+      const response = await fetch('http://localhost:3002/api/health-check');
+      return response.ok;
+    } catch (error) {
+      console.error('Server availability check failed:', error);
+      return false;
+    }
+  },
+  
+  // Get data sources
+  getDataSources: async function() {
+    try {
+      const userIdToUse = userId || localStorage.getItem('userId') || 'anonymous';
+      const response = await fetch(`http://localhost:3002/api/data-sources?userId=${userIdToUse}`);
+      if (response.ok) {
+        return await response.json();
+      } else {
+        return { error: 'Failed to fetch data sources', uploads: [], textInputs: [], websiteContent: [] };
+      }
+    } catch (error) {
+      console.error('Error fetching data sources:', error);
+      return { error: error.message, uploads: [], textInputs: [], websiteContent: [] };
+    }
+  }
+};
+
+// Assign to window for global access
+window.api = api;
+
 async function refreshDataSources() {
   try {
     // Check if server is available
-    if (!window.api.isServerAvailable()) {
+    const isAvailable = await api.isServerAvailable();
+    if (!isAvailable) {
       console.log('Server not available, skipping data sources refresh');
       return;
     }
     
     // Use API handler to get data sources
-    const data = await window.api.getDataSources();
+    const data = await api.getDataSources();
     
     if (!data.error) {
       // Update Files list
@@ -508,18 +571,20 @@ if (refreshButton) {
 }
 
 // Display user ID for reference
-console.log('Using temporary user ID:', userId);
+console.log('Using temporary user ID:', userId || 'not set');
 
 // ===== LOGO UPLOAD HANDLING =====
 let uploadedLogoUrl = null;
 
-// Handle logo file selection
-document.getElementById('agentLogo').addEventListener('change', async (e) => {
-  const fileInput = e.target;
-  const logoPreviewContainer = document.getElementById('logoPreviewContainer');
-  const logoPreview = document.getElementById('logoPreview');
-  
-  if (fileInput.files && fileInput.files[0]) {
+// Handle logo file selection - use safe method
+const agentLogoElement = document.getElementById('agentLogo');
+if (agentLogoElement) {
+  agentLogoElement.addEventListener('change', async (e) => {
+    const fileInput = e.target;
+    const logoPreviewContainer = document.getElementById('logoPreviewContainer');
+    const logoPreview = document.getElementById('logoPreview');
+    
+    if (fileInput.files && fileInput.files[0]) {
     // Show loading state
     logoPreviewContainer.classList.remove('d-none');
     logoPreview.src = '/img/loading.svg';
@@ -551,11 +616,12 @@ document.getElementById('agentLogo').addEventListener('change', async (e) => {
       logoPreviewContainer.classList.add('d-none');
       alert('Error uploading logo: ' + error.message);
     }
-  } else {
-    // No file selected, hide preview
-    logoPreviewContainer.classList.add('d-none');
-  }
-});
+    } else {
+      // No file selected, hide preview
+      logoPreviewContainer.classList.add('d-none');
+    }
+  });
+}
 
 // Handle logo removal
 safeAddEventListener('removeLogo', 'click', () => {

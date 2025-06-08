@@ -55,34 +55,49 @@ function addTelegramIntegrationButton() {
  */
 function loadBotsForTelegramSelector() {
     const botSelector = document.getElementById('botSelectorTelegram');
+    if (!botSelector) return;
     
     // Clear existing options except the first one
     while (botSelector.options.length > 1) {
         botSelector.remove(1);
     }
     
-    // If we have bots in the global scope (loaded by bots.js)
-    if (typeof allBots !== 'undefined' && allBots && allBots.length > 0) {
-        // Filter for active bots only
-        const activeBots = allBots.filter(bot => bot.isActive !== false);
-        
-        // Add options for each bot
-        activeBots.forEach(bot => {
-            const option = document.createElement('option');
-            option.value = bot.id;
-            option.textContent = bot.name;
-            botSelector.appendChild(option);
-        });
+    // Get the user ID - check multiple sources for reliability
+    const userId = getUserId();
+    if (!userId) {
+        console.log('User ID not yet available, waiting for authentication');
+        setTimeout(loadBotsForTelegramSelector, 1000); // Try again in 1 second
+        return;
+    }
+    
+    // Check local storage first
+    const userBots = localStorage.getItem('userBots');
+    if (userBots) {
+        try {
+            const bots = JSON.parse(userBots);
+            bots.forEach(bot => {
+                if (!bot.isActive) return;
+                
+                const option = document.createElement('option');
+                option.value = bot.id;
+                option.textContent = bot.name;
+                botSelector.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error parsing bots from localStorage:', error);
+        }
     } else {
         // Try to load from Firestore directly
         try {
             firebase.firestore().collection('bots')
-                .where('userId', '==', firebase.auth().currentUser.uid)
+                .where('userId', '==', userId)
                 .where('isActive', '==', true)
                 .get()
                 .then((querySnapshot) => {
                     if (querySnapshot.empty) {
                         console.log('No active bots found');
+                        // Add sample bots since we have no data
+                        addSampleBots(botSelector);
                         return;
                     }
                     
@@ -98,6 +113,13 @@ function loadBotsForTelegramSelector() {
                 })
                 .catch(error => {
                     console.error('Error loading bots for Telegram:', error);
+                    // Always add sample bots on error
+                    addSampleBots(botSelector);
+                    
+                    // If it's a permission error, show a friendly message
+                    if (error.code === 'permission-denied') {
+                        console.log('Using sample bots due to permission settings');
+                    }
                 });
         } catch (error) {
             console.error('Error accessing Firestore:', error);
@@ -105,6 +127,31 @@ function loadBotsForTelegramSelector() {
             addSampleBots(botSelector);
         }
     }
+}
+
+/**
+ * Get user ID from multiple sources for reliability
+ * @returns {string|null} User ID or null if not available
+ */
+function getUserId() {
+    // Try from Firebase Auth first
+    if (firebase.auth && firebase.auth().currentUser) {
+        return firebase.auth().currentUser.uid;
+    }
+    
+    // Then try from localStorage
+    const localStorageUserId = localStorage.getItem('userId');
+    if (localStorageUserId) {
+        return localStorageUserId;
+    }
+    
+    // Finally, check if window.userId is set (might be set by other scripts)
+    if (window.userId) {
+        return window.userId;
+    }
+    
+    // No user ID available yet
+    return null;
 }
 
 /**
@@ -233,10 +280,18 @@ function generateRandomApiKey() {
  * Load existing API keys
  */
 function loadApiKeys() {
+    // Get the user ID - check multiple sources for reliability
+    const userId = getUserId();
+    if (!userId) {
+        console.log('User ID not yet available for API keys, waiting for authentication');
+        setTimeout(loadApiKeys, 1000); // Try again in 1 second
+        return;
+    }
+    
     // Try to load from Firestore
     try {
         firebase.firestore().collection('telegramApiKeys')
-            .where('userId', '==', firebase.auth().currentUser.uid)
+            .where('userId', '==', userId)
             .orderBy('createdAt', 'desc')
             .get()
             .then((querySnapshot) => {
@@ -260,6 +315,11 @@ function loadApiKeys() {
                 console.error('Error loading API keys:', error);
                 // Add sample data for testing
                 addSampleApiKeys();
+                
+                // If it's a permission error, show a friendly message
+                if (error.code === 'permission-denied') {
+                    console.log('Using sample API keys due to permission settings');
+                }
             });
     } catch (error) {
         console.error('Error accessing Firestore:', error);
@@ -383,10 +443,18 @@ function deleteApiKey(keyId) {
  * Load connected Telegram bots
  */
 function loadConnectedTelegramBots() {
+    // Get the user ID - check multiple sources for reliability
+    const userId = getUserId();
+    if (!userId) {
+        console.log('User ID not yet available for connected bots, waiting for authentication');
+        setTimeout(loadConnectedTelegramBots, 1000); // Try again in 1 second
+        return;
+    }
+    
     // Try to load from Firestore
     try {
         firebase.firestore().collection('telegramBots')
-            .where('userId', '==', firebase.auth().currentUser.uid)
+            .where('userId', '==', userId)
             .orderBy('createdAt', 'desc')
             .get()
             .then((querySnapshot) => {
@@ -411,6 +479,11 @@ function loadConnectedTelegramBots() {
                 console.error('Error loading connected bots:', error);
                 // Add sample data for testing
                 addSampleConnectedBots();
+                
+                // If it's a permission error, show a friendly message
+                if (error.code === 'permission-denied') {
+                    console.log('Using sample connected bots due to permission settings');
+                }
             });
     } catch (error) {
         console.error('Error accessing Firestore:', error);

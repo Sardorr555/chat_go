@@ -44,6 +44,10 @@
     </script>
 </head>
 <body>
+    <!-- Warning Banner - Test Mode Only -->
+    <div style="background-color: #ffeeee; border: 2px solid #ff0000; color: #ff0000; padding: 10px; text-align: center; font-weight: bold; margin-bottom: 10px;">
+        ⚠️ WARNING: This application is in TEST MODE ONLY and should not be used in production deployments! ⚠️
+    </div>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
@@ -381,12 +385,19 @@
             }
             
             // Display user email
-            firebase.auth().onAuthStateChanged(function(user) {
-                const userEmailElement = document.getElementById('userEmail');
-                if (user && userEmailElement) {
-                    userEmailElement.textContent = user.email;
-                }
-            });
+            const userEmailElement = document.getElementById('userEmail');
+            if (userEmailElement) {
+                firebase.auth().onAuthStateChanged(function(user) {
+                    
+                    if (user) {
+                        // User is signed in
+                        userNameElement.textContent = user.displayName || 'User';
+                        userEmailElement.textContent = user.email;
+                    }
+                });
+            } else {
+                console.warn('Firebase not available');
+            }
         });
     </script>
 </body>

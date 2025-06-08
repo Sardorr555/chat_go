@@ -421,8 +421,8 @@ function updateSettingsSection() {
                 <form class="admin-form">
                     <div class="mb-3">
                         <label for="apiBaseUrl" class="form-label">API Base URL</label>
-                        <input type="text" class="form-control" id="apiBaseUrl" value="http://localhost:3001/api">
-                        <small class="form-text text-muted">Default backend API runs on port 3001</small>
+                        <input type="text" class="form-control" id="apiBaseUrl" value="http://localhost:3002/api">
+                        <small class="form-text text-muted">Default backend API runs on port 3002</small>
                     </div>
                     <div class="mb-3 form-check">
                         <input type="checkbox" class="form-check-input" id="enforceAuth" checked>

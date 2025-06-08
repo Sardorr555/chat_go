@@ -4,7 +4,7 @@
  */
 
 // Base URL for API
-const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : '/api';
+const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3002/api' : '/api';
 let serverAvailable = false;
 let lastServerCheck = 0;
 const SERVER_CHECK_INTERVAL = 30000; // Check server every 30 seconds

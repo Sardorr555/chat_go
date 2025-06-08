@@ -436,12 +436,13 @@ document.addEventListener('DOMContentLoaded', function() {
   showAuthLoadingOverlay();
   
   // To prevent multiple checks on the same page
-  if (authCheckCompleted) {
-    console.log('Auth check already completed on this page load');
+  if (authCheckCompleted || sessionStorage.getItem('authCheckedThisSession')) {
+    console.log('Auth check already completed this session');
     hideAuthLoadingOverlay();
     return;
   }
   authCheckCompleted = true;
+  sessionStorage.setItem('authCheckedThisSession', 'true');
   
   // Try local storage check first (fastest)
   if (checkLocalStorageAuth()) {

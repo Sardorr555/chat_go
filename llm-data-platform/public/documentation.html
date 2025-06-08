@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Documentation - LLM Data Platform</title>
+    <title>Documentation - Swipies AI Platform</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -12,10 +12,180 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Prism.js for Code Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/themes/prism-okaidia.min.css">
     <!-- Platform Styles -->
     <link rel="stylesheet" href="css/platform-styles.css">
+    
+    <style>
+        /* Documentation-specific styles */
+        body {
+            scroll-behavior: smooth;
+            position: relative;
+        }
+        
+        .doc-container {
+            padding: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .doc-navigation {
+            position: sticky;
+            top: 20px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            padding-right: 15px;
+            padding-bottom: 20px;
+        }
+        
+        .nav-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .doc-nav-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .doc-nav-item {
+            margin-bottom: 5px;
+        }
+        
+        .doc-nav-link {
+            display: block;
+            padding: 8px 15px;
+            border-radius: 5px;
+            color: #333;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        
+        .doc-nav-link:hover {
+            background-color: rgba(13, 110, 253, 0.1);
+            color: #0d6efd;
+        }
+        
+        .doc-nav-link.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+        
+        .doc-nav-sublist {
+            list-style: none;
+            padding-left: 20px;
+            margin-top: 5px;
+        }
+        
+        .doc-section {
+            margin-bottom: 40px;
+            padding-top: 20px;
+        }
+        
+        .doc-section h3 {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .doc-section p {
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+        
+        .code-block {
+            position: relative;
+            background-color: #272822;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .code-block pre {
+            padding: 20px;
+            margin-bottom: 0;
+            overflow-x: auto;
+        }
+        
+        .code-block code {
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.9rem;
+        }
+        
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .copy-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .alert-tips {
+            background-color: rgba(13, 202, 240, 0.1);
+            border-left: 4px solid #0dcaf0;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        
+        .alert-warning {
+            background-color: rgba(255, 193, 7, 0.1);
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        
+        .alert-important {
+            background-color: rgba(220, 53, 69, 0.1);
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .alert-title i {
+            margin-right: 8px;
+        }
+        
+        @media (max-width: 991.98px) {
+            .doc-navigation {
+                position: relative;
+                top: 0;
+                margin-bottom: 30px;
+            }
+        }
+    </style>
 </head>
 <body>
+    <!-- Warning Banner - Test Mode Only -->
+    <div style="background-color: #ffeeee; border: 2px solid #ff0000; color: #ff0000; padding: 10px; text-align: center; font-weight: bold; margin-bottom: 10px;">
+        ⚠️ WARNING: This application is in TEST MODE ONLY and should not be used in production deployments! ⚠️
+    </div>
+
     <!-- Mobile Header (visible only on small screens) -->
     <div class="mobile-header d-md-none">
         <button class="sidebar-toggle">
@@ -35,9 +205,7 @@
                     </button>
                 </div>
                 
-                <a href="main.html" class="sidebar-item">
-                    <i class="bi bi-plus-circle"></i> <span>Create Agent</span>
-                </a>
+                <!-- Create Agent link removed from sidebar -->
                 
                 <a href="bots.html" class="sidebar-item">
                     <i class="bi bi-robot"></i> <span>My Bots</span>
@@ -54,9 +222,7 @@
                 <a href="qa.html" class="sidebar-item">
                     <i class="bi bi-chat-dots"></i> <span>Q&A</span>
                 </a>
-                <a href="telegram.html" class="sidebar-item">
-                    <i class="bi bi-telegram"></i> <span>Telegram Bot</span>
-                </a>
+                
                 <a href="documentation.html" class="sidebar-item active">
                     <i class="bi bi-book"></i> <span>Documentation</span>
                 </a>
@@ -70,112 +236,669 @@
                     <a href="#" class="btn btn-dark px-5">Pro</a>
                 </div>
                 
-                <div class="header">
-                    <h1>Documentation</h1>
+                <div class="header mb-4">
+                    <h1>Swipies AI Platform Documentation</h1>
+                    <p class="lead text-muted">Complete guide to using the Swipies AI Platform for LLM integration and development</p>
                 </div>
                 
-                <div class="doc-section">
-                    <h3>Website Integration</h3>
-                    <p>Integrate your LLM-powered chat agent into any website with a simple script tag. Follow these steps to get started:</p>
-                    
-                    <div class="card mb-4">
-                        <div class="card-body">
-                            <h5>1. Create an Agent</h5>
-                            <p>Go to the <a href="/">Create Agent</a> tab and configure your agent with a name, description, and optional logo.</p>
-                            
-                            <h5>2. Add the Script to Your Website</h5>
-                            <p>Copy the generated script tag and paste it into the <code>&lt;head&gt;</code> section of your HTML:</p>
-                            <div class="code-block">
-                                <pre><code>&lt;script src="https://llm-data-platform.example.com/agent.js?id=YOUR_AGENT_ID" async&gt;&lt;/script&gt;</code></pre>
-                                <button class="copy-btn">Copy</button>
+                <div class="container-fluid">
+                    <div class="row">
+                        <!-- Documentation Navigation Sidebar -->
+                        <div class="col-lg-3">
+                            <div class="doc-navigation">
+                                <div class="nav-title">
+                                    <i class="bi bi-book"></i> Documentation
+                                </div>
+                                <ul class="doc-nav-list" id="docNavList">
+                                    <li class="doc-nav-item">
+                                        <a href="#getting-started" class="doc-nav-link">Getting Started</a>
+                                    </li>
+                                    <li class="doc-nav-item">
+                                        <a href="#website-integration" class="doc-nav-link">Website Integration</a>
+                                        <ul class="doc-nav-sublist">
+                                            <li><a href="#website-integration-basic" class="doc-nav-link">Basic Integration</a></li>
+                                            <li><a href="#website-integration-advanced" class="doc-nav-link">Advanced Options</a></li>
+                                            <li><a href="#website-integration-styling" class="doc-nav-link">Styling & Customization</a></li>
+                                        </ul>
+                                    </li>
+                                    <li class="doc-nav-item">
+                                        <a href="#telegram-integration" class="doc-nav-link">Telegram Bot Integration</a>
+                                        <ul class="doc-nav-sublist">
+                                            <li><a href="#telegram-setup" class="doc-nav-link">Bot Setup</a></li>
+                                            <li><a href="#telegram-hosting" class="doc-nav-link">Hosting Your Bot</a></li>
+                                            <li><a href="#telegram-commands" class="doc-nav-link">Custom Commands</a></li>
+                                        </ul>
+                                    </li>
+                                    <li class="doc-nav-item">
+                                        <a href="#python-integration" class="doc-nav-link">Python Integration</a>
+                                        <ul class="doc-nav-sublist">
+                                            <li><a href="#python-basic" class="doc-nav-link">Basic Usage</a></li>
+                                            <li><a href="#python-advanced" class="doc-nav-link">Advanced Usage</a></li>
+                                            <li><a href="#python-examples" class="doc-nav-link">Example Projects</a></li>
+                                        </ul>
+                                    </li>
+                                    <li class="doc-nav-item">
+                                        <a href="#api-reference" class="doc-nav-link">API Reference</a>
+                                    </li>
+                                    <li class="doc-nav-item">
+                                        <a href="#storage-management" class="doc-nav-link">Storage Management</a>
+                                    </li>
+                                    <li class="doc-nav-item">
+                                        <a href="#faq" class="doc-nav-link">FAQ</a>
+                                    </li>
+                                </ul>
                             </div>
-                            
-                            <h5>3. Customize Behavior (Optional)</h5>
-                            <p>You can customize the chat widget by adding a configuration object before the script:</p>
-                            <div class="code-block">
-                                <pre><code>&lt;script&gt;
-  window.LLMChatConfig = {
+                        </div>
+                        
+                        <!-- Documentation Content -->
+                        <div class="col-lg-9">
+                            <div class="doc-container">
+                
+                                <!-- Getting Started Section -->
+                                <div class="doc-section" id="getting-started">
+                                    <h3>Getting Started with Swipies AI Platform</h3>
+                                    <p>Welcome to the Swipies AI Platform documentation! This guide will help you understand how to use our platform to create and deploy powerful AI agents powered by Large Language Models (LLMs).</p>
+                                    
+                                    <div class="alert-tips">
+                                        <div class="alert-title"><i class="bi bi-lightbulb"></i> What is Swipies AI Platform?</div>
+                                        <p>Swipies AI Platform is a comprehensive solution for creating, fine-tuning, and deploying LLM-powered AI agents for various applications including websites, messaging platforms, and custom applications. Our platform focuses on making advanced AI technology accessible with minimal technical overhead.</p>
+                                    </div>
+                                    
+                                    <h4 class="mt-4">Platform Overview</h4>
+                                    <p>The Swipies AI Platform consists of several components:</p>
+                                    
+                                    <div class="row mt-3">
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card h-100">
+                                                <div class="card-body">
+                                                    <h5 class="card-title"><i class="bi bi-robot text-primary me-2"></i> AI Agents</h5>
+                                                    <p class="card-text">Create customized AI agents that can understand and respond to user queries based on your data. These agents can be integrated into websites, Telegram bots, or other applications.</p>
+                                                    <a href="bots.html" class="card-link">Manage Agents</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card h-100">
+                                                <div class="card-body">
+                                                    <h5 class="card-title"><i class="bi bi-database text-primary me-2"></i> Data Management</h5>
+                                                    <p class="card-text">Upload and manage various types of data that your AI agents can use, including text files, websites, and structured Q&A pairs.</p>
+                                                    <a href="files.html" class="card-link">Manage Files</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card h-100">
+                                                <div class="card-body">
+                                                    <h5 class="card-title"><i class="bi bi-code-slash text-primary me-2"></i> API Integration</h5>
+                                                    <p class="card-text">Connect your applications to our platform using our comprehensive API, which supports Python, JavaScript, and other programming languages.</p>
+                                                    <a href="#api-reference" class="card-link">API Reference</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card h-100">
+                                                <div class="card-body">
+                                                    <h5 class="card-title"><i class="bi bi-gear text-primary me-2"></i> Platform Settings</h5>
+                                                    <p class="card-text">Configure your account, manage storage limits, and set preferences for your AI agents and integrations.</p>
+                                                    <a href="account.html" class="card-link">Account Settings</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <h4 class="mt-4">Quick Start Guide</h4>
+                                    <p>To get started with the Swipies AI Platform, follow these steps:</p>
+                                    
+                                    <ol class="mt-3">
+                                        <li class="mb-2"><strong>Create an account or log in</strong> to access the platform.</li>
+                                        <li class="mb-2"><strong>Upload your data</strong> using the Files, Text, or Website sections.</li>
+                                        <li class="mb-2"><strong>Create an AI agent</strong> from the dashboard and configure it to use your data.</li>
+                                        <li class="mb-2"><strong>Integrate your agent</strong> into your website, Telegram bot, or custom application.</li>
+                                        <li class="mb-2"><strong>Monitor and improve</strong> your agent's performance through the analytics dashboard.</li>
+                                    </ol>
+                                    
+                                    <div class="alert-warning mt-4">
+                                        <div class="alert-title"><i class="bi bi-exclamation-triangle"></i> Storage Limits</div>
+                                        <p>The free tier of Swipies AI Platform includes 1MB of storage. This is sufficient for most text-based applications, but you may need to upgrade to a paid plan for larger datasets or more complex applications.</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Website Integration Section -->
+                                <div class="doc-section" id="website-integration">
+                                    <h3>Website Integration</h3>
+                                    <p>Integrate your LLM-powered chat agent into any website with a simple script tag. The Swipies AI Platform provides an easy-to-use widget that can be customized to match your website's design.</p>
+                                    
+                                    <div id="website-integration-basic" class="card mb-4">
+                                        <div class="card-body">
+                                            <h4>Website Integration: Step-by-Step Guide</h4>
+                                            <p>Follow these steps to add your AI chatbot to any website:</p>
+                                            
+                                            <div class="integration-steps">
+                                                <div class="step">
+                                                    <div class="step-number">1</div>
+                                                    <div class="step-content">
+                                                        <h5>Create Your Bot</h5>
+                                                        <p>Go to the <a href="main.html"><strong>My Bots</strong></a> page and click <strong>"Create New Bot"</strong>. Give your bot a name and description that matches its purpose on your website.</p>
+                                                        
+                                                        <div class="alert-tips">
+                                                            <p><i class="bi bi-lightbulb"></i> <strong>Tip:</strong> Upload files or website URLs that contain information your bot should know about your business, products, or services.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="step">
+                                                    <div class="step-number">2</div>
+                                                    <div class="step-content">
+                                                        <h5>Get Your Integration Code</h5>
+                                                        <p>After creating your bot:</p>
+                                                        <ol>
+                                                            <li>Click on your bot in the <strong>My Bots</strong> list</li>
+                                                            <li>Go to the <strong>Integrations</strong> tab</li>
+                                                            <li>Find the <strong>Website Integration</strong> section</li>
+                                                            <li>Click <strong>"Copy Script"</strong> to copy your unique integration code</li>
+                                                        </ol>
+                                                        
+                                                        <div class="alert-important">
+                                                            <p><i class="bi bi-info-circle"></i> <strong>Important:</strong> Each bot has its own unique script tag with a specific ID. Make sure you're using the correct one for the bot you want on your website.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="step">
+                                                    <div class="step-number">3</div>
+                                                    <div class="step-content">
+                                                        <h5>Add the Script to Your Website</h5>
+                                                        <p>Open your website's HTML file and paste the script tag into the <code>&lt;head&gt;</code> section:</p>
+                                                        
+                                                        <div class="code-block">
+                                                            <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Your Website&lt;/title&gt;
+    
+    &lt;!-- Other head elements like meta tags, CSS --&gt;
+    
+    &lt;!-- Swipies AI Chatbot Integration - Paste this script tag --&gt;
+    <div style="background-color: #ffeeee; border: 2px solid #ff0000; color: #ff0000; padding: 10px; margin: 15px 0; border-radius: 5px;">
+        <strong>⚠️ WARNING:</strong> This chatbot integration is for <strong>TEST ENVIRONMENTS ONLY</strong>. Do not use in production deployments as it may cause stability issues or data leakage. Use a proper API key for production.
+    </div>
+    &lt;script src="https://swipies.ai/agent.js?id=YOUR_AGENT_ID" async&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;!-- Your website content --&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                                                            <button class="copy-btn">Copy</button>
+                                                        </div>
+                                                        
+                                                        <p class="mt-3"><strong>That's it!</strong> After adding the script tag, the chat widget will automatically appear on your website. No additional configuration is required.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="alert-tips mt-4">
+                                                <div class="alert-title"><i class="bi bi-lightbulb"></i> Working with CMS Platforms</div>
+                                                <p>If you're using a CMS like WordPress, Shopify, or Wix:</p>
+                                                <ul>
+                                                    <li><strong>WordPress:</strong> Add the script in Appearance → Theme Editor → Theme Header or use a header/footer plugin</li>
+                                                    <li><strong>Shopify:</strong> Go to Online Store → Themes → Edit HTML/CSS → Layout → theme.liquid</li>
+                                                    <li><strong>Wix:</strong> Go to Settings → Advanced → Custom Code → Add Custom Code → Header</li>
+                                                </ul>
+                                            </div>
+                                            
+                                            <div class="alert-tips mt-3">
+                                                <div class="alert-title"><i class="bi bi-lightbulb"></i> Testing Tip</div>
+                                                <p>You can test your integration locally before deploying it to your production website. The chat widget will appear in the bottom-right corner of your website by default.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="website-integration-advanced" class="card mb-4">
+                                        <div class="card-body">
+                                            <h4>Advanced Configuration Options</h4>
+                                            <p>You can customize the behavior of your chat widget by adding a configuration object before the script tag:</p>
+                                            
+                                            <div class="code-block">
+                                                <pre><code>&lt;script&gt;
+  window.SwipiesAIConfig = {
     position: 'bottom-right',  // bottom-right, bottom-left, top-right, top-left
     initialMessage: 'Hello! How can I help you today?',
     primaryColor: '#0d6efd',
     textColor: '#ffffff',
-    showBranding: false
+    showBranding: false,
+    botName: 'Support Assistant',
+    triggerSelector: '#chat-button', // Optional CSS selector for custom trigger
+    autoOpen: false, // Whether to open the chat widget automatically
+    language: 'en', // Default language (en, es, fr, de, etc.)
+    allowAttachments: true, // Allow users to upload files
+    persistSession: true // Remember conversation history
   };
 &lt;/script&gt;</code></pre>
-                                <button class="copy-btn">Copy</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                                                <button class="copy-btn">Copy</button>
+                                            </div>
+                                            
+                                            <h5 class="mt-4">Configuration Options Reference</h5>
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Option</th>
+                                                            <th>Type</th>
+                                                            <th>Default</th>
+                                                            <th>Description</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td><code>position</code></td>
+                                                            <td>String</td>
+                                                            <td>bottom-right</td>
+                                                            <td>Position of the chat widget. Options: bottom-right, bottom-left, top-right, top-left</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><code>initialMessage</code></td>
+                                                            <td>String</td>
+                                                            <td>Hello! How can I help you today?</td>
+                                                            <td>First message shown to the user when the chat opens</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><code>primaryColor</code></td>
+                                                            <td>String</td>
+                                                            <td>#0d6efd</td>
+                                                            <td>Primary color for the chat widget (CSS color value)</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><code>textColor</code></td>
+                                                            <td>String</td>
+                                                            <td>#ffffff</td>
+                                                            <td>Text color for buttons and header (CSS color value)</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><code>showBranding</code></td>
+                                                            <td>Boolean</td>
+                                                            <td>true</td>
+                                                            <td>Whether to show "Powered by Swipies AI" in the chat</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="website-integration-styling" class="card mb-4">
+                                        <div class="card-body">
+                                            <h4>Styling & Customization</h4>
+                                            <p>You can further customize the appearance of your chat widget using CSS. The widget uses shadow DOM, but you can override styles using the provided CSS hooks:</p>
+                                            
+                                            <div class="code-block">
+                                                <pre><code>&lt;style&gt;
+  /* Custom styles for the Swipies AI chat widget */
+  .swipies-ai-chat-widget {
+    /* Custom styles for the container */
+  }
+  
+  .swipies-ai-chat-header {
+    /* Custom styles for the chat header */
+  }
+  
+  .swipies-ai-chat-messages {
+    /* Custom styles for the messages container */
+  }
+  
+  .swipies-ai-user-message {
+    /* Custom styles for user messages */
+  }
+  
+  .swipies-ai-bot-message {
+    /* Custom styles for bot messages */
+  }
+&lt;/style&gt;</code></pre>
+                                                <button class="copy-btn">Copy</button>
+                                            </div>
+                                            
+                                            <div class="alert-important mt-3">
+                                                <div class="alert-title"><i class="bi bi-exclamation-triangle"></i> Important Note</div>
+                                                <p>Custom CSS styling is only available on the Pro plan. Standard plan users can use the basic color customization options provided in the configuration object.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                 
-                <div class="doc-section">
-                    <h3>Telegram Bot Integration</h3>
-                    <p>Create a Telegram bot that uses your LLM Data Platform with rug pull capabilities. This allows you to reach users through the Telegram messaging platform.</p>
-                    
-                    <div class="card mb-4">
-                        <div class="card-body">
-                            <h5>1. Generate an API Key</h5>
-                            <p>Go to the <a href="/telegram.html">Telegram Bot</a> tab and click "Generate API Key".</p>
-                            
-                            <h5>2. Create a Bot with BotFather</h5>
-                            <p>Open Telegram and search for @BotFather. Start a chat and use the /newbot command to create a new bot. BotFather will give you a token.</p>
-                            
-                            <h5>3. Set Up Your Bot</h5>
-                            <p>Create a new Node.js project and install the required dependencies:</p>
-                            <div class="code-block">
-                                <pre><code>npm init -y
+                                <!-- Telegram Bot Integration Section -->
+                                <div class="doc-section" id="telegram-integration">
+                                    <h3>Telegram Bot Integration</h3>
+                                    <p>Create a Telegram bot powered by your Swipies AI agents. This allows you to engage with users through the Telegram messaging platform, which has over 500 million active users worldwide.</p>
+                                    
+                                    <div class="alert-tips">
+                                        <div class="alert-title"><i class="bi bi-lightbulb"></i> Why Telegram Bots?</div>
+                                        <p>Telegram bots offer a powerful way to reach users where they already are. They can provide customer support, deliver content, answer questions, or even facilitate transactions—all powered by your Swipies AI agents.</p>
+                                    </div>
+                                    
+                                    <div id="telegram-setup" class="card mb-4">
+                                        <div class="card-body">
+                                            <h4>Bot Setup</h4>
+                                            <p>Follow these steps to create and connect your Telegram bot:</p>
+                                            
+                                            <h5 class="mt-4">1. Find Your Swipies API Key</h5>
+                                            <p>First, you need your API key to connect your Telegram bot to your Swipies AI agent:</p>
+                                            <ol>
+                                                <li>Go to the <a href="main.html"><strong>My Bots</strong></a> page in your dashboard</li>
+                                                <li>Find your bot in the list and click on it</li>
+                                                <li>Go to the <strong>Integrations</strong> tab</li>
+                                                <li>Look for the <strong>API Key</strong> section and copy your unique API key</li>
+                                                <li>Save this API key securely—you'll need it for your Telegram bot</li>
+                                            </ol>
+                                            
+                                            <div class="alert-important mt-3">
+                                                <div class="alert-title"><i class="bi bi-info-circle"></i> Finding Your API Key</div>
+                                                <img src="img/docs/api-key-location.png" alt="API Key Location" class="img-fluid mt-2 mb-3 border rounded" style="max-width: 100%">
+                                                <p>Your API key is unique to each bot you create. Make sure you're using the correct API key for the bot you want to connect to Telegram.</p>
+                                            </div>
+                                            
+                                            <h5 class="mt-4">2. Create a Bot with BotFather</h5>
+                                            <p>Next, create your Telegram bot using BotFather, Telegram's official bot creation tool:</p>
+                                            <ol>
+                                                <li>Open Telegram and search for "@BotFather"</li>
+                                                <li>Start a chat and send the command <code>/newbot</code></li>
+                                                <li>Follow the prompts to name your bot and create a username (must end in "bot")</li>
+                                                <li>BotFather will provide a token—save this token securely</li>
+                                            </ol>
+                                            
+                                            <div class="alert-warning mt-3">
+                                                <div class="alert-title"><i class="bi bi-shield-exclamation"></i> Security Warning</div>
+                                                <p>Keep your Telegram bot token and Swipies API key confidential. Anyone with these tokens can control your bot and access your Swipies account. Never commit them to public repositories or share them in insecure channels.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="telegram-hosting" class="card mb-4">
+                                        <div class="card-body">
+                                            <h4>Hosting Your Bot</h4>
+                                            <p>Now that you have your tokens, you can set up and host your bot:</p>
+                                            
+                                            <h5 class="mt-4">1. Set Up Your Project</h5>
+                                            <p>Create a new Node.js project and install the required dependencies:</p>
+                                            <div class="code-block">
+                                                <pre><code>mkdir my-swipies-telegram-bot
+cd my-swipies-telegram-bot
+npm init -y
 npm install telegraf axios dotenv</code></pre>
-                                <button class="copy-btn">Copy</button>
-                            </div>
-                            
-                            <h5>4. Create Environment File</h5>
-                            <p>Create a <code>.env</code> file with your Telegram bot token:</p>
-                            <div class="code-block">
-                                <pre><code>TELEGRAM_BOT_TOKEN=your_bot_token_from_botfather</code></pre>
-                                <button class="copy-btn">Copy</button>
-                            </div>
-                            
-                            <h5>5. Use the Generated Bot Code</h5>
-                            <p>Copy the generated bot code from the Telegram Bot tab and save it as <code>bot.js</code>.</p>
-                            
-                            <h5>6. Run Your Bot</h5>
-                            <p>Start your bot with:</p>
-                            <div class="code-block">
-                                <pre><code>node bot.js</code></pre>
-                                <button class="copy-btn">Copy</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                                                <button class="copy-btn">Copy</button>
+                                            </div>
+                                            
+                                            <h5 class="mt-3">2. Create Environment File</h5>
+                                            <p>Create a <code>.env</code> file in your project directory with your tokens:</p>
+                                            <div class="code-block">
+                                                <pre><code>TELEGRAM_BOT_TOKEN=your_bot_token_from_botfather
+SWIPIES_API_KEY=your_swipies_api_key</code></pre>
+                                                <button class="copy-btn">Copy</button>
+                                            </div>
+                                            
+                                            <h5 class="mt-3">3. Use the Generated Bot Code</h5>
+                                            <p>The Swipies AI Platform will generate custom code for your bot. Go to the Telegram Bot section, enter your bot's details, and click "Generate Bot Code". Copy this code and save it as <code>bot.js</code> in your project directory.</p>
+                                            
+                                            <h5 class="mt-3">3. Using Python with Aiogram</h5>
+                                            <p>If you prefer using Python instead of Node.js, you can create your Telegram bot using the Aiogram framework:</p>
+                                            
+                                            <div class="code-block">
+                                                <pre><code># Install the required packages
+pip install aiogram python-dotenv requests</code></pre>
+                                                <button class="copy-btn">Copy</button>
+                                            </div>
+                                            
+                                            <p class="mt-3">Create a new Python file named <code>bot.py</code> with the following code:</p>
+                                            
+                                            <div class="code-block">
+                                                <pre><code>import os
+import logging
+import requests
+from dotenv import load_dotenv
+from aiogram import Bot, Dispatcher, executor, types
+
+# Load environment variables
+load_dotenv()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+
+# Initialize bot and dispatcher
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+SWIPIES_API_KEY = os.getenv("SWIPIES_API_KEY")
+SWIPIES_API_URL = "https://api.swipies.ai/chat"  # Adjust as needed
+
+bot = Bot(token=TELEGRAM_BOT_TOKEN)
+dp = Dispatcher(bot)
+
+# Handler for /start command
+@dp.message_handler(commands=["start"])
+async def send_welcome(message: types.Message):
+    await message.reply("Hi! I'm your AI assistant powered by Swipies. Ask me anything!")</code></pre>
+                                                <button class="copy-btn">Copy</button>
+                                            </div>
+                                            
+                                            <p class="mt-3">Add the message handler that will connect to your Swipies AI:</p>
+                                            
+                                            <div class="code-block">
+                                                <pre><code># Handler for all text messages
+@dp.message_handler()
+async def handle_all_messages(message: types.Message):
+    user_id = message.from_user.id
+    user_text = message.text
+    
+    # Show typing status while waiting for AI response
+    await bot.send_chat_action(message.chat.id, "typing")
+    
+    try:
+        # Call the Swipies AI API
+        response = requests.post(
+            SWIPIES_API_URL,
+            json={
+                "message": user_text,
+                "apiKey": SWIPIES_API_KEY,
+                "userId": str(user_id)  # Optional for tracking conversations
+            },
+            timeout=30  # Set a reasonable timeout
+        )
+        
+        if response.status_code == 200:
+            ai_response = response.json().get("answer")
+            await message.reply(ai_response)
+        else:
+            await message.reply(f"Sorry, I encountered an error: {response.status_code}")
+    
+    except Exception as e:
+        await message.reply(f"Sorry, something went wrong: {str(e)}")
+
+# Main execution point
+if __name__ == "__main__":
+    print("Starting Swipies AI Telegram bot...")
+    executor.start_polling(dp, skip_updates=True)</code></pre>
+                                                <button class="copy-btn">Copy</button>
+                                            </div>
+                                            
+                                            <div class="alert-tips mt-3">
+                                                <div class="alert-title"><i class="bi bi-lightbulb"></i> Advanced Features</div>
+                                                <p>You can enhance your Aiogram bot with additional features such as:</p>
+                                                <ul>
+                                                    <li><strong>Conversation History</strong>: Store conversation IDs to maintain context</li>
+                                                    <li><strong>Multiple Agents</strong>: Route different commands to different Swipies agents</li>
+                                                    <li><strong>Message Filtering</strong>: Add preprocessing for user messages before sending to the API</li>
+                                                </ul>
+                                            </div>
+                                            
+                                            <h5 class="mt-3">4. Run Your Bot</h5>
+                                            <p>Create a <code>.env</code> file with your tokens and run your bot:</p>
+                                            
+                                            <div class="code-block">
+                                                <pre><code># Create .env file with your tokens
+TELEGRAM_BOT_TOKEN=your_telegram_token_from_botfather
+SWIPIES_API_KEY=your_swipies_api_key_from_dashboard</code></pre>
+                                                <button class="copy-btn">Copy</button>
+                                            </div>
+                                            
+                                            <div class="code-block mt-3">
+                                                <pre><code># Run your bot
+python bot.py</code></pre>
+                                                <button class="copy-btn">Copy</button>
+                                            </div>
+                                            
+                                            <h5 class="mt-4">5. Hosting Options</h5>
+                                            <p>For a production bot, you'll want to host it on a reliable server. Some options include:</p>
+                                            <ul>
+                                                <li><strong>PythonAnywhere</strong>: Easy Python hosting with free and paid plans</li>
+                                                <li><strong>Digital Ocean</strong>: More control with affordable VPS options</li>
+                                                <li><strong>Heroku</strong>: Easy deployment with free and paid tiers</li>
+                                                <li><strong>Railway</strong>: Modern platform with simple deployment</li>
+                                            </ul>
+                                            
+                                            <div class="code-block">
+                                                <pre><code># Example PM2 deployment
+npm install -g pm2
+pm2 start bot.js --name "swipies-telegram-bot"
+pm2 save</code></pre>
+                                                <button class="copy-btn">Copy</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="telegram-commands" class="card mb-4">
+                                        <div class="card-body">
+                                            <h4>Custom Commands</h4>
+                                            <p>You can extend your bot with custom commands beyond the default functionality. Here's how to add custom commands to your bot code:</p>
+                                            
+                                            <div class="code-block">
+                                                <pre><code>// Add this to your bot.js file
+
+// Command to provide help information
+bot.command('help', async (ctx) => {
+  await ctx.reply(
+    'I\'m your AI assistant powered by Swipies AI! Here are some commands:\n' +
+    '/start - Start a conversation\n' +
+    '/help - Show this help message\n' +
+    '/about - Learn about this bot\n' +
+    'You can also just send me any message, and I\'ll respond!'
+  );
+});
+
+// Command to show information about the bot
+bot.command('about', async (ctx) => {
+  await ctx.reply(
+    'This bot is powered by Swipies AI Platform, which uses advanced LLMs to provide intelligent responses based on custom knowledge.\n\n' +
+    'Created by: Your Company Name\n' +
+    'Version: 1.0.0'
+  );
+});
+
+// Custom action handler for specific keywords
+bot.hears(['pricing', 'price', 'cost'], async (ctx) => {
+  await ctx.reply(
+    'Our pricing plans:\n\n' +
+    '• Basic: $9.99/month\n' +
+    '• Pro: $19.99/month\n' +
+    '• Enterprise: Contact us for custom pricing\n\n' +
+    'Visit our website for more details!'
+  );
+});</code></pre>
+                                                <button class="copy-btn">Copy</button>
+                                            </div>
+                                            
+                                            <h5 class="mt-3">Command Reference</h5>
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Method</th>
+                                                            <th>Description</th>
+                                                            <th>Example</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td><code>bot.command()</code></td>
+                                                            <td>Handles slash commands like /start</td>
+                                                            <td><code>bot.command('start', (ctx) => { ... })</code></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><code>bot.hears()</code></td>
+                                                            <td>Responds to specific words or phrases</td>
+                                                            <td><code>bot.hears(['hi', 'hello'], (ctx) => { ... })</code></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><code>bot.on('text')</code></td>
+                                                            <td>Responds to any text message</td>
+                                                            <td><code>bot.on('text', (ctx) => { ... })</code></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><code>bot.action()</code></td>
+                                                            <td>Handles inline keyboard button presses</td>
+                                                            <td><code>bot.action('button_id', (ctx) => { ... })</code></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                 
-                <div class="doc-section">
-                    <h3>Python Integration</h3>
-                    <p>Use your LLM Data Platform with Python applications by leveraging our API:</p>
-                    
-                    <div class="card mb-4">
-                        <div class="card-body">
-                            <h5>1. Install Required Packages</h5>
-                            <div class="code-block">
-                                <pre><code>pip install requests</code></pre>
-                                <button class="copy-btn">Copy</button>
-                            </div>
-                            
-                            <h5>2. Basic API Usage</h5>
-                            <div class="code-block">
-                                <pre><code>import requests
+                                <!-- Python Integration Section -->
+                                <div class="doc-section" id="python-integration">
+                                    <h3>Python Integration</h3>
+                                    <p>The Swipies AI Platform provides a powerful REST API that you can easily integrate with your Python applications. This allows you to leverage the platform's AI capabilities in your custom software, data pipelines, or automated workflows.</p>
+                                    
+                                    <div class="alert-tips">
+                                        <div class="alert-title"><i class="bi bi-lightbulb"></i> Python Integration Benefits</div>
+                                        <p>Python integration is perfect for data scientists, developers, and businesses looking to automate AI-powered interactions, perform batch processing of requests, or build custom applications on top of the Swipies AI Platform.</p>
+                                    </div>
+                                    
+                                    <div id="python-basic" class="card mb-4">
+                                        <div class="card-body">
+                                            <h4>Basic Usage</h4>
+                                            <p>Follow these steps to start using the Swipies AI Platform in your Python applications:</p>
+                                            
+                                            <h5 class="mt-4">1. Generate an API Key</h5>
+                                            <p>First, generate an API key from your Swipies AI dashboard:</p>
+                                            <ol>
+                                                <li>Navigate to the <strong>Account</strong> section</li>
+                                                <li>Click on <strong>API Keys</strong></li>
+                                                <li>Generate a new API key and store it securely</li>
+                                            </ol>
+                                            
+                                            <h5 class="mt-3">2. Install Required Packages</h5>
+                                            <p>Install the necessary Python packages:</p>
+                                            <div class="code-block">
+                                                <pre><code>pip install requests python-dotenv</code></pre>
+                                                <button class="copy-btn">Copy</button>
+                                            </div>
+                                            
+                                            <h5 class="mt-3">3. Basic API Usage</h5>
+                                            <p>Here's a simple example of how to use the Swipies AI API in Python:</p>
+                                            <div class="code-block">
+                                                <pre><code>import requests
+import os
+from dotenv import load_dotenv
 
-# Replace with your API key and endpoint
-API_KEY = "your_api_key"
-API_URL = "https://llm-data-platform.example.com/api"
+# Load API key from .env file (recommended for security)
+load_dotenv()
+API_KEY = os.getenv("SWIPIES_API_KEY")
+API_URL = "https://api.swipies.ai"
 
-# Send a query to the LLM
-def ask_question(question):
+# Send a query to the AI agent
+def ask_question(question, agent_id=None):
+    payload = {
+        "message": question,
+        "apiKey": API_KEY
+    }
+    
+    # Optionally specify a particular agent
+    if agent_id:
+        payload["agentId"] = agent_id
+    
     response = requests.post(
         f"{API_URL}/chat",
-        json={
-            "message": question,
-            "apiKey": API_KEY
-        }
+        json=payload
     )
     
     if response.status_code == 200:
@@ -184,19 +907,512 @@ def ask_question(question):
         return f"Error: {response.status_code} - {response.text}"
 
 # Example usage
-question = "What is the capital of France?"
+question = "What are the key benefits of using Swipies AI Platform?"
 answer = ask_question(question)
 print(f"Q: {question}\nA: {answer}")</code></pre>
-                                <button class="copy-btn">Copy</button>
-                            </div>
-                            
-                            <h5>3. Telegram Bot with Python</h5>
-                            <p>You can also create a Telegram bot using Python:</p>
-                            <div class="code-block">
-                                <pre><code>import requests
+                                                <button class="copy-btn">Copy</button>
+                                            </div>
+                                            
+                                            <div class="alert-warning mt-3">
+                                                <div class="alert-title"><i class="bi bi-shield-exclamation"></i> Security Best Practice</div>
+                                                <p>Always store your API key in environment variables or a secure configuration file, never hardcode it directly in your scripts or commit it to version control.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="python-advanced" class="card mb-4">
+                                        <div class="card-body">
+                                            <h4>Advanced Usage</h4>
+                                            <p>For more complex applications, you can use the full range of Swipies AI API endpoints:</p>
+                                            
+                                            <h5 class="mt-4">Working with Files and Data Sources</h5>
+                                            <p>Upload and manage files that your AI agents can use as knowledge sources:</p>
+                                            <div class="code-block">
+                                                <pre><code>import requests
 import os
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
+from dotenv import load_dotenv
+
+load_dotenv()
+API_KEY = os.getenv("SWIPIES_API_KEY")
+API_URL = "https://api.swipies.ai"
+
+# Upload a file to use as a knowledge source
+def upload_file(file_path, description="Uploaded via Python API"):
+    with open(file_path, 'rb') as file:
+        files = {
+            'file': (os.path.basename(file_path), file)
+        }
+        data = {
+            'apiKey': API_KEY,
+            'description': description
+        }
+        
+        response = requests.post(
+            f"{API_URL}/upload",
+            files=files,
+            data=data
+        )
+        
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return f"Error: {response.status_code} - {response.text}"
+
+# List all your uploaded files
+def list_files():
+    response = requests.get(
+        f"{API_URL}/files",
+        params={"apiKey": API_KEY}
+    )
+    
+    if response.status_code == 200:
+        return response.json()["files"]
+    else:
+        return f"Error: {response.status_code} - {response.text}"
+
+# Example usage
+file_path = "./data/product_documentation.pdf"
+upload_result = upload_file(file_path)
+print(f"Upload result: {upload_result}")
+
+files = list_files()
+print(f"Your files: {files}")</code></pre>
+                                                <button class="copy-btn">Copy</button>
+                                            </div>
+                                            
+                                            <h5 class="mt-4">Batch Processing</h5>
+                                            <p>Process multiple queries efficiently with batching:</p>
+                                            <div class="code-block">
+                                                <pre><code>import requests
+import os
+from dotenv import load_dotenv
+import time
+from concurrent.futures import ThreadPoolExecutor
+
+load_dotenv()
+API_KEY = os.getenv("SWIPIES_API_KEY")
+API_URL = "https://api.swipies.ai"
+
+# Function to process a single query
+def process_query(query):
+    response = requests.post(
+        f"{API_URL}/chat",
+        json={
+            "message": query,
+            "apiKey": API_KEY
+        }
+    )
+    
+    if response.status_code == 200:
+        return {
+            "query": query,
+            "answer": response.json()["answer"]
+        }
+    else:
+        return {
+            "query": query,
+            "error": f"Error: {response.status_code} - {response.text}"
+        }
+
+# Process multiple queries in parallel
+def batch_process(queries, max_workers=5):
+    results = []
+    
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = [executor.submit(process_query, query) for query in queries]
+        for future in futures:
+            results.append(future.result())
+    
+    return results
+
+# Example usage
+queries = [
+    "What is the Swipies AI Platform?",
+    "How can I integrate Swipies with my website?",
+    "What programming languages are supported?",
+    "What are the pricing plans?"
+]
+
+results = batch_process(queries)
+for result in results:
+    print(f"Q: {result['query']}\nA: {result.get('answer', result.get('error'))}\n")</code></pre>
+                                                <button class="copy-btn">Copy</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="python-examples" class="card mb-4">
+                                        <div class="card-body">
+                                            <h4>Example Projects</h4>
+                                            <p>Here are some example applications you can build using the Swipies AI Platform and Python:</p>
+                                            
+                                            <div class="row mt-3">
+                                                <div class="col-md-6 mb-3">
+                                                    <div class="card h-100">
+                                                        <div class="card-body">
+                                                            <h5 class="card-title"><i class="bi bi-robot text-primary me-2"></i> Customer Support Bot</h5>
+                                                            <p class="card-text">Create a custom support bot that can be deployed on your website, Slack, or Discord, leveraging the Swipies AI API to provide intelligent responses based on your product documentation.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-md-6 mb-3">
+                                                    <div class="card h-100">
+                                                        <div class="card-body">
+                                                            <h5 class="card-title"><i class="bi bi-file-earmark-text text-primary me-2"></i> Document Analyzer</h5>
+                                                            <p class="card-text">Build a tool that analyzes documents, extracts key information, and generates summaries or answers questions about the content using the Swipies AI Platform.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-md-6 mb-3">
+                                                    <div class="card h-100">
+                                                        <div class="card-body">
+                                                            <h5 class="card-title"><i class="bi bi-translate text-primary me-2"></i> Multilingual Content Generator</h5>
+                                                            <p class="card-text">Create a tool that generates content in multiple languages based on your brand guidelines and specific requirements using the Swipies AI API.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-md-6 mb-3">
+                                                    <div class="card h-100">
+                                                        <div class="card-body">
+                                                            <h5 class="card-title"><i class="bi bi-envelope text-primary me-2"></i> Email Automation System</h5>
+                                                            <p class="card-text">Develop an email automation system that can generate personalized responses to common inquiries, categorize incoming emails, and draft replies for review.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="alert-tips mt-3">
+                                                <div class="alert-title"><i class="bi bi-lightbulb"></i> Sample Code Repository</div>
+                                                <p>Check out our <a href="https://github.com/swipies-ai/python-examples" target="_blank">GitHub repository</a> for complete example projects and code samples that you can use as starting points for your own applications.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- API Reference Section -->
+                                <div class="doc-section" id="api-reference">
+                                    <h3>API Reference</h3>
+                                    <p>The Swipies AI Platform provides a comprehensive REST API for integrating AI capabilities into your applications. This reference outlines the key endpoints and their usage.</p>
+                                    
+                                    <div class="card mb-4">
+                                        <div class="card-body">
+                                            <h4>Authentication</h4>
+                                            <p>All API requests require authentication using an API key. You can include your API key in requests using one of the following methods:</p>
+                                            
+                                            <ul>
+                                                <li>As a query parameter: <code>?apiKey=YOUR_API_KEY</code></li>
+                                                <li>In the request body: <code>{"apiKey": "YOUR_API_KEY"}</code></li>
+                                                <li>As an Authorization header: <code>Authorization: Bearer YOUR_API_KEY</code></li>
+                                            </ul>
+                                            
+                                            <div class="alert-important mt-3">
+                                                <div class="alert-title"><i class="bi bi-shield-exclamation"></i> Security Warning</div>
+                                                <p>Always use HTTPS for API requests to ensure your API key is transmitted securely. Never share your API key or expose it in client-side code.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="card mb-4">
+                                        <div class="card-body">
+                                            <h4>Endpoints</h4>
+                                            
+                                            <h5 class="mt-4">1. Chat API</h5>
+                                            <p>Send a message to an AI agent and receive a response.</p>
+                                            
+                                            <table class="table table-bordered">
+                                                <tbody>
+                                                    <tr><td><strong>URL</strong></td><td><code>https://api.swipies.ai/chat</code></td></tr>
+                                                    <tr><td><strong>Method</strong></td><td>POST</td></tr>
+                                                    <tr><td><strong>Request Body</strong></td><td>
+                                                        <pre><code>{
+  "message": "Your question or message here",
+  "apiKey": "YOUR_API_KEY",
+  "agentId": "optional-agent-id",
+  "userId": "optional-user-id-for-conversation-tracking",
+  "conversationId": "optional-conversation-id-for-context"
+}</code></pre>
+                                                    </td></tr>
+                                                    <tr><td><strong>Response</strong></td><td>
+                                                        <pre><code>{
+  "answer": "The AI-generated response",
+  "conversationId": "conversation-id-for-continued-context"
+}</code></pre>
+                                                    </td></tr>
+                                                </tbody>
+                                            </table>
+                                            
+                                            <h5 class="mt-4">2. File Upload API</h5>
+                                            <p>Upload a file to use as a knowledge source for your AI agents.</p>
+                                            
+                                            <table class="table table-bordered">
+                                                <tbody>
+                                                    <tr><td><strong>URL</strong></td><td><code>https://api.swipies.ai/upload</code></td></tr>
+                                                    <tr><td><strong>Method</strong></td><td>POST</td></tr>
+                                                    <tr><td><strong>Content-Type</strong></td><td>multipart/form-data</td></tr>
+                                                    <tr><td><strong>Request Body</strong></td><td>
+                                                        <ul>
+                                                            <li><code>file</code>: The file to upload (PDF, TXT, DOCX, etc.)</li>
+                                                            <li><code>apiKey</code>: Your API key</li>
+                                                            <li><code>description</code>: Optional description of the file</li>
+                                                            <li><code>agentId</code>: Optional agent ID to associate with this file</li>
+                                                        </ul>
+                                                    </td></tr>
+                                                    <tr><td><strong>Response</strong></td><td>
+                                                        <pre><code>{
+  "fileId": "unique-file-id",
+  "filename": "uploaded-file-name.pdf",
+  "size": 1048576,
+  "status": "processing"
+}</code></pre>
+                                                    </td></tr>
+                                                </tbody>
+                                            </table>
+                                            
+                                            <h5 class="mt-4">3. Website Parsing API</h5>
+                                            <p>Extract content from a website to use as a knowledge source.</p>
+                                            
+                                            <table class="table table-bordered">
+                                                <tbody>
+                                                    <tr><td><strong>URL</strong></td><td><code>https://api.swipies.ai/parse-website</code></td></tr>
+                                                    <tr><td><strong>Method</strong></td><td>POST</td></tr>
+                                                    <tr><td><strong>Request Body</strong></td><td>
+                                                        <pre><code>{
+  "url": "https://example.com/page-to-parse",
+  "apiKey": "YOUR_API_KEY",
+  "depth": 1,
+  "maxPages": 10
+}</code></pre>
+                                                    </td></tr>
+                                                    <tr><td><strong>Response</strong></td><td>
+                                                        <pre><code>{
+  "sourceId": "unique-source-id",
+  "url": "https://example.com/page-to-parse",
+  "pageCount": 5,
+  "status": "processing"
+}</code></pre>
+                                                    </td></tr>
+                                                </tbody>
+                                            </table>
+                                            
+                                            <div class="alert-tips mt-3">
+                                                <div class="alert-title"><i class="bi bi-lightbulb"></i> API Explorer</div>
+                                                <p>A complete interactive API explorer is available in your account dashboard under the <strong>API</strong> section, where you can test endpoints directly and view your API usage statistics.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Storage Management Section -->
+                                <div class="doc-section" id="storage-management">
+                                    <h3>Storage Management</h3>
+                                    <p>The Swipies AI Platform provides efficient storage management for your data sources and AI agents. Understanding how storage works will help you optimize your usage and manage costs effectively.</p>
+                                    
+                                    <div class="card mb-4">
+                                        <div class="card-body">
+                                            <h4>Storage Limits</h4>
+                                            <p>Each account has a storage allocation based on the subscription plan:</p>
+                                            
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Plan</th>
+                                                            <th>Storage Limit</th>
+                                                            <th>File Size Limit</th>
+                                                            <th>Additional Storage</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>Free</td>
+                                                            <td>1 MB</td>
+                                                            <td>500 KB</td>
+                                                            <td>Not available</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Standard</td>
+                                                            <td>50 MB</td>
+                                                            <td>5 MB</td>
+                                                            <td>$5 per 10 MB</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Pro</td>
+                                                            <td>250 MB</td>
+                                                            <td>25 MB</td>
+                                                            <td>$3 per 10 MB</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Enterprise</td>
+                                                            <td>1 GB+</td>
+                                                            <td>100 MB</td>
+                                                            <td>Custom pricing</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            
+                                            <div class="alert-warning mt-3">
+                                                <div class="alert-title"><i class="bi bi-exclamation-triangle"></i> Storage Usage</div>
+                                                <p>Storage usage is calculated based on the raw size of uploaded files plus the processed embeddings generated from your data. Embeddings typically add approximately 15-20% to your storage usage.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="card mb-4">
+                                        <div class="card-body">
+                                            <h4>Optimizing Storage Usage</h4>
+                                            <p>Follow these best practices to optimize your storage usage:</p>
+                                            
+                                            <ol>
+                                                <li>
+                                                    <strong>Compress files before uploading</strong>
+                                                    <p>Compress large documents, especially those with images, before uploading to reduce storage consumption.</p>
+                                                </li>
+                                                <li>
+                                                    <strong>Extract relevant content</strong>
+                                                    <p>Instead of uploading entire documents, extract only the most relevant sections to create more focused knowledge sources.</p>
+                                                </li>
+                                                <li>
+                                                    <strong>Use the Website Parser</strong>
+                                                    <p>The website parser is optimized to extract only the relevant content from web pages, ignoring navigation elements, ads, and other non-essential components.</p>
+                                                </li>
+                                                <li>
+                                                    <strong>Review and remove unused data</strong>
+                                                    <p>Regularly review your data sources and remove any that are no longer needed or have been superseded by newer versions.</p>
+                                                </li>
+                                            </ol>
+                                            
+                                            <h5 class="mt-4">Storage Monitoring</h5>
+                                            <p>You can monitor your storage usage in real-time from the <strong>Account</strong> section of your dashboard. The storage usage chart shows:</p>
+                                            
+                                            <ul>
+                                                <li>Total storage used vs. available</li>
+                                                <li>Storage breakdown by data type (files, websites, text, etc.)</li>
+                                                <li>Historical storage usage trends</li>
+                                            </ul>
+                                            
+                                            <div class="alert-tips mt-3">
+                                                <div class="alert-title"><i class="bi bi-lightbulb"></i> Storage Optimization Tip</div>
+                                                <p>If you're approaching your storage limit, consider using the <strong>Text Summarization</strong> feature to condense large documents into smaller, more focused knowledge sources while preserving the essential information.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- FAQ Section -->
+                                <div class="doc-section" id="faq">
+                                    <h3>Frequently Asked Questions</h3>
+                                    <p>Find answers to common questions about the Swipies AI Platform.</p>
+                                    
+                                    <div class="card mb-4">
+                                        <div class="card-body">
+                                            <div class="accordion" id="faqAccordion">
+                                                <div class="accordion-item">
+                                                    <h2 class="accordion-header" id="faqHeading1">
+                                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse1" aria-expanded="true" aria-controls="faqCollapse1">
+                                                            What types of files can I upload to the platform?
+                                                        </button>
+                                                    </h2>
+                                                    <div id="faqCollapse1" class="accordion-collapse collapse show" aria-labelledby="faqHeading1" data-bs-parent="#faqAccordion">
+                                                        <div class="accordion-body">
+                                                            <p>The Swipies AI Platform supports a wide range of file formats, including:</p>
+                                                            <ul>
+                                                                <li><strong>Text Documents</strong>: PDF, DOCX, DOC, TXT, RTF, PPTX, PPT</li>
+                                                                <li><strong>Spreadsheets</strong>: XLSX, XLS, CSV</li>
+                                                                <li><strong>Markdown</strong>: MD</li>
+                                                                <li><strong>Code</strong>: PY, JS, HTML, CSS, JSON, and more</li>
+                                                            </ul>
+                                                            <p>The platform will extract text content from these files and process it for use by your AI agents. For image-heavy documents, OCR is applied to extract text from images.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="accordion-item">
+                                                    <h2 class="accordion-header" id="faqHeading2">
+                                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse2" aria-expanded="false" aria-controls="faqCollapse2">
+                                                            How accurate are the AI responses based on my data?
+                                                        </button>
+                                                    </h2>
+                                                    <div id="faqCollapse2" class="accordion-collapse collapse" aria-labelledby="faqHeading2" data-bs-parent="#faqAccordion">
+                                                        <div class="accordion-body">
+                                                            <p>The accuracy of AI responses depends on several factors:</p>
+                                                            <ol>
+                                                                <li><strong>Quality of source data</strong>: Clearer, more structured data typically yields better results.</li>
+                                                                <li><strong>Data relevance</strong>: The more specific and relevant your data is to the questions being asked, the more accurate the responses will be.</li>
+                                                                <li><strong>Query formulation</strong>: Clear, specific questions tend to get more accurate answers than vague ones.</li>
+                                                            </ol>
+                                                            <p>The platform uses advanced semantic search and retrieval techniques to find the most relevant information in your data. While the AI strives for accuracy, we recommend reviewing AI-generated responses for critical applications. You can improve accuracy by providing feedback on responses and refining your data sources over time.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="accordion-item">
+                                                    <h2 class="accordion-header" id="faqHeading3">
+                                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse3" aria-expanded="false" aria-controls="faqCollapse3">
+                                                            Is my data secure on the platform?
+                                                        </button>
+                                                    </h2>
+                                                    <div id="faqCollapse3" class="accordion-collapse collapse" aria-labelledby="faqHeading3" data-bs-parent="#faqAccordion">
+                                                        <div class="accordion-body">
+                                                            <p>Yes, data security is a top priority for the Swipies AI Platform:</p>
+                                                            <ul>
+                                                                <li><strong>Encryption</strong>: All data is encrypted both in transit (using TLS) and at rest (using AES-256).</li>
+                                                                <li><strong>Isolation</strong>: Your data is isolated from other users' data and is only accessible to your account.</li>
+                                                                <li><strong>Access Control</strong>: Granular access controls allow you to determine who can access your data and AI agents.</li>
+                                                                <li><strong>Compliance</strong>: The platform is designed with privacy regulations in mind, including GDPR and CCPA.</li>
+                                                                <li><strong>Data Retention</strong>: You control how long your data is stored, and can delete it at any time.</li>
+                                                            </ul>
+                                                            <p>Enterprise plans include additional security features such as SSO, audit logs, and custom data retention policies.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="accordion-item">
+                                                    <h2 class="accordion-header" id="faqHeading4">
+                                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse4" aria-expanded="false" aria-controls="faqCollapse4">
+                                                            Can I customize the appearance of the chat widget?
+                                                        </button>
+                                                    </h2>
+                                                    <div id="faqCollapse4" class="accordion-collapse collapse" aria-labelledby="faqHeading4" data-bs-parent="#faqAccordion">
+                                                        <div class="accordion-body">
+                                                            <p>Yes, the chat widget is highly customizable:</p>
+                                                            <ul>
+                                                                <li><strong>Basic Customization</strong> (All Plans): Change colors, position, initial message, and bot name.</li>
+                                                                <li><strong>Advanced Customization</strong> (Pro and Enterprise Plans): Custom CSS styling, custom icons, and theme options.</li>
+                                                                <li><strong>White Labeling</strong> (Enterprise Plan): Remove Swipies branding and add your own logo.</li>
+                                                            </ul>
+                                                            <p>Customization options are available in the Website Integration section of your agent settings. You can preview changes in real-time before deploying to your website.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="accordion-item">
+                                                    <h2 class="accordion-header" id="faqHeading5">
+                                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse5" aria-expanded="false" aria-controls="faqCollapse5">
+                                                            How can I upgrade my plan?
+                                                        </button>
+                                                    </h2>
+                                                    <div id="faqCollapse5" class="accordion-collapse collapse" aria-labelledby="faqHeading5" data-bs-parent="#faqAccordion">
+                                                        <div class="accordion-body">
+                                                            <p>You can upgrade your plan at any time from the Account section of your dashboard:</p>
+                                                            <ol>
+                                                                <li>Go to <strong>Account > Subscription</strong></li>
+                                                                <li>Click on <strong>Upgrade Plan</strong></li>
+                                                                <li>Select your desired plan and payment method</li>
+                                                                <li>Complete the checkout process</li>
+                                                            </ol>
+                                                            <p>Your plan will be upgraded immediately, and you'll be charged the prorated difference for the remainder of your billing cycle. All your existing data and agents will be preserved when you upgrade.</p>
+                                                            <p>For Enterprise plans or custom requirements, please contact our sales team at <a href="mailto:sales@swipies.ai">sales@swipies.ai</a>.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
 # Replace with your API key and endpoint
 API_KEY = "your_api_key"

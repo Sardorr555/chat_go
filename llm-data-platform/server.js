@@ -19,6 +19,26 @@ const { generateAgentCode } = require('./src/utils/agentGenerator');
 const { generateApiKey, generateTelegramBotCode, generateSetupInstructions } = require('./src/utils/telegramBotIntegration');
 const { MAX_STORAGE_PER_CHATBOT, calculateChatbotStorageSize, checkStorageLimit, cleanupOldestData, getStringSizeInBytes } = require('./src/utils/storageLimiter');
 
+// Create a mock database if the real one is not available
+let dbRef = firebaseAdmin.db;
+if (!dbRef) {
+  console.log('Creating in-memory database for storage operations');
+  dbRef = {
+    collection: (name) => ({
+      doc: (id) => ({
+        set: async (data) => Promise.resolve(data),
+        get: async () => Promise.resolve({ exists: false, data: () => ({}) })
+      }),
+      where: () => ({
+        orderBy: () => ({
+          get: async () => Promise.resolve({ empty: true, docs: [] })
+        }),
+        get: async () => Promise.resolve({ empty: true, docs: [] })
+      })
+    })
+  };
+}
+
 // Create Express app
 const app = express();
 // Note: Flowise uses port 3000 by default, so we'll use 3001 for our server
@@ -167,19 +187,21 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
 // ===== TEXT INPUT ENDPOINT =====
 app.post('/api/text', async (req, res) => {
   try {
-    const { text, userId } = req.body;
+    // Accept both content or text fields for compatibility
+    const content = req.body.content || req.body.text;
+    const userId = req.body.userId;
     
-    if (!text) {
-      return res.status(400).json({ error: 'No text provided' });
+    if (!content) {
+      return res.status(400).json({ error: 'No text content provided' });
     }
     
     const userIdToUse = userId || 'anonymous';
     
     // Calculate text size
-    const textSize = getStringSizeInBytes(text);
+    const textSize = getStringSizeInBytes(content);
     
     // Check storage limit for this user
-    const storageCheck = await checkStorageLimit(firebaseConfig.db, userIdToUse, textSize);
+    const storageCheck = await checkStorageLimit(dbRef, userIdToUse, textSize);
     
     if (storageCheck.wouldExceedLimit) {
       console.log(`Text save would exceed storage limit for user ${userIdToUse}. Current: ${storageCheck.totalSize}, New: ${textSize}, Max: ${MAX_STORAGE_PER_CHATBOT}`);
@@ -198,7 +220,7 @@ app.post('/api/text', async (req, res) => {
       
       // Option 2: Clean up old data to make room
       console.log(`Attempting to clean up ${textSize} bytes for user ${userIdToUse}`);
-      const cleanup = await cleanupOldestData(firebaseConfig.db, userIdToUse, textSize);
+      const cleanup = await cleanupOldestData(dbRef, userIdToUse, textSize);
       
       if (!cleanup.success) {
         // Even after cleanup, there's not enough space
@@ -217,27 +239,30 @@ app.post('/api/text', async (req, res) => {
     }
     
     // Create text record with a preview for display
-    const preview = text.length > 100 ? `${text.substring(0, 100)}...` : text;
+    const preview = content.length > 100 ? `${content.substring(0, 100)}...` : content;
     const textRecord = {
       id: uuidv4(),
-      text,
+      text: content, // Store in 'text' field for backward compatibility
       preview,
       userId: userIdToUse,
       createdAt: new Date(),
       byteSize: textSize
     };
     
-    // Save to Firebase
-    if (firebaseConfig.db) {
-      await firebaseConfig.db.collection('textInputs').doc(textRecord.id).set(textRecord);
-      console.log(`Saved text record to Firebase: ${textRecord.id}`);
+    // Save to Firebase or mock database
+    try {
+      await dbRef.collection('textInputs').doc(textRecord.id).set(textRecord);
+      console.log(`Saved text record to database: ${textRecord.id}`);
+      
+      // Also save to in-memory database for development & rug pulling use
+      db.textInputs.push(textRecord);
+      console.log(`Text content saved for rug pulling: ${textRecord.id}`);
+    } catch (error) {
+      console.error('Error saving text to database:', error);
     }
     
-    // Also save to in-memory database for development
-    db.textInputs.push(textRecord);
-    
     // Get updated storage stats
-    const updatedStats = await calculateChatbotStorageSize(firebaseConfig.db, userIdToUse);
+    const updatedStats = await calculateChatbotStorageSize(dbRef, userIdToUse);
     
     res.status(200).json({
       message: 'Text saved successfully',
@@ -814,7 +839,7 @@ app.get('/api/storage-stats', async (req, res) => {
     const userId = req.query.userId || 'anonymous';
     
     // Get storage statistics
-    const storageInfo = await calculateChatbotStorageSize(firebaseAdmin.db, userId);
+    const storageInfo = await calculateChatbotStorageSize(dbRef, userId);
     
     res.status(200).json({
       userId,
@@ -836,6 +861,61 @@ app.get('/api/storage-stats', async (req, res) => {
   } catch (error) {
     console.error('Error fetching storage stats:', error);
     res.status(500).json({ error: 'Failed to fetch storage statistics', details: error.message });
+  }
+});
+
+// Endpoint for retrieving text inputs
+app.get('/api/texts', async (req, res) => {
+  try {
+    const userId = req.query.userId || 'anonymous';
+    
+    // Get texts for the user
+    let texts = [];
+    
+    // Try to get from Firebase first
+    if (dbRef) {
+      try {
+        const snapshot = await dbRef.collection('textInputs')
+          .where('userId', '==', userId)
+          .orderBy('createdAt', 'desc')
+          .get();
+        
+        if (!snapshot.empty) {
+          texts = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              content: data.text,
+              timestamp: data.createdAt.toDate().toISOString(),
+              size: data.byteSize || 0
+            };
+          });
+        }
+      } catch (dbError) {
+        console.error('Error fetching texts from Firebase:', dbError);
+      }
+    }
+    
+    // Fallback to in-memory database if Firebase failed or has no results
+    if (texts.length === 0) {
+      texts = db.textInputs
+        .filter(item => item.userId === userId)
+        .map(item => ({
+          id: item.id,
+          content: item.text,
+          timestamp: item.createdAt instanceof Date ? item.createdAt.toISOString() : new Date(item.createdAt).toISOString(),
+          size: item.byteSize || 0
+        }))
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    }
+    
+    res.status(200).json({
+      texts,
+      count: texts.length
+    });
+  } catch (error) {
+    console.error('Error fetching texts:', error);
+    res.status(500).json({ error: 'Failed to fetch texts', details: error.message });
   }
 });
 
